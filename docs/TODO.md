@@ -31,16 +31,24 @@ smaller and the queue itself. (Substrate goals 1–3: done.)
       pad in isolation; later swap instruments per track, then upload/
       import — pairs with the sample-library work.
 
-## Sound quality (composer-design Tier 2 — the audible-payoff queue)
+## Sound quality (strategy + order in docs/sound-design.md)
 
-- [ ] Deeper synthesis recipes + more/better presets (filter envelopes
-      that move, FM recipes, tuned unison).
-- [ ] Transition craft as composer idioms: `riser()`, sweeps, impacts,
-      crash placement helpers; richer fills.
-- [ ] Duck tuning (make the pump obvious by default in demos).
-- [ ] Sample playback (`sample()` clips) + small CC0 starter library;
-      later `dawai samples search/get` (Freesound).
-- [ ] `dawai analyze` (key inference, clash detection, density).
+1. [ ] **L1 synthesis + mixing sprint**: moving filter envelopes,
+       layered custom voices, reese/supersaw recipes, upgraded drum
+       voices, OTT-style multiband bus glue, transition idioms
+       (`riser`/`sweep`/`impact`, richer fills), duck tuning;
+       re-author Neon Rain as the benchmark.
+2. [ ] **Sample playback + curated CC0 starter library** (hybrid
+       thesis: drums/FX from samples, tonal layer from synthesis);
+       sound browser as the human swap surface; later
+       `dawai samples search/get` (Freesound).
+3. [ ] **`dawai render --out mix.wav` + analysis** — the numeric ears:
+       LUFS, spectral balance, crest factor, reference matching; plus
+       `dawai analyze` (key inference, clash detection, density).
+4. [ ] **Resampling primitive**: `resample(pattern, throughChain)` via
+       deterministic OfflineAudioContext render at compile-render time.
+5. [ ] **L2/L3 synth engine** (AudioWorklet → Faust/WASM; Vital as the
+       ceiling reference) — its own epic.
 
 ## Product direction: user editability (staged; boundary 1 already
    anticipates it — every edit writes through the source)
