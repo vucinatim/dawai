@@ -63,4 +63,34 @@ describe("purity boundaries (architecture 3 + 4)", () => {
       }
     }
   });
+
+  test("Tone.js exists only inside packages/ui (boundary 3)", () => {
+    for (const packageName of ["core", "composer", "cli"]) {
+      const manifest = JSON.parse(
+        readFileSync(
+          resolve(repoRoot, `packages/${packageName}/package.json`),
+          "utf8",
+        ),
+      ) as {
+        dependencies?: Record<string, string>;
+        devDependencies?: Record<string, string>;
+      };
+      const declared = {
+        ...manifest.dependencies,
+        ...manifest.devDependencies,
+      };
+      expect("tone" in declared, `packages/${packageName} declares tone`).toBe(
+        false,
+      );
+      for (const file of sourceFiles(
+        resolve(repoRoot, `packages/${packageName}/src`),
+      )) {
+        const source = readFileSync(file, "utf8");
+        expect(
+          /from\s+["']tone["']/.test(source),
+          `${file} imports tone outside packages/ui`,
+        ).toBe(false);
+      }
+    }
+  });
 });

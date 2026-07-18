@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "test": "bun test",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && bun run --cwd packages/ui typecheck",
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
     "check": "bun run typecheck && bun run lint && bun test"

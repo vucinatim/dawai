@@ -21,5 +21,6 @@
     "packages/*/src/**/*.ts",
     "packages/*/test/**/*.ts",
     "fixtures/*/*.ts"
-  ]
+  ],
+  "exclude": ["packages/ui"]
 }

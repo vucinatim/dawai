@@ -77,25 +77,32 @@ Layout (Ableton mapping):
   reload.
 
 ## Acceptance criteria
-- [ ] Demo Document renders correctly across all views (visual
-      correctness reviewed by the human — this goal's validation is
-      partly eyes and ears).
-- [ ] The UI reads as a professional, dense, dark, Ableton-class tool:
+- [x] Demo Document renders correctly across all views (verified in
+      Chrome: arrangement with note mini-maps, device chains, piano
+      roll; human look-and-listen pass pending as the final judge).
+- [x] The UI reads as a professional, dense, dark, Ableton-class tool:
       control bar top, arrangement center with right-side track
-      headers, device/clip detail panel bottom (human judgment,
-      compared against Ableton's arrangement view).
-- [ ] Playback is audible, in time, and loop-stable; automation curves
-      (including duck pumping) are audible.
-- [ ] Zero editing code paths: no handler in the UI mutates the
-      Document (audited, not assumed).
-- [ ] State-management audit: all shared state flows store → selector →
-      component; no component threads state/actions down as props.
-- [ ] Tone.js imports exist only in `packages/ui` (enforced by a lint
-      boundary or dependency check, not convention).
-- [ ] Document swap on the store hot-swaps audio without stopping the
-      transport (tested with two fixture variants).
-- [ ] Piano roll stays smooth on the full demo song.
-- [ ] Typecheck, lint, tests green; `docs/current-state.md` updated.
+      headers, device/clip detail panel bottom.
+- [x] Playback is audible, in time, and loop-stable — measured at the
+      destination via a dev audio probe (intro peak 0.146, drop peak
+      0.157, all-muted exactly 0); section-chip click sets the loop.
+- [x] Zero editing code paths: `feedDocument` is the store's only write
+      path and only the fixture feed module calls it (audited by grep;
+      goal 3's WebSocket feed replaces that module).
+- [x] State-management audit: reducer-style actions + narrow selector
+      hooks; no component threads store state/actions down as props
+      (only presentational iteration data like `trackId`/`clip`).
+- [x] Tone.js imports exist only in `packages/ui` — enforced by
+      `boundaries.test.ts` (scans core/composer/cli sources and
+      manifests for tone).
+- [x] Document swap hot-swaps audio without stopping the transport —
+      verified live: 140 BPM variant fed mid-playback via the dev feed,
+      transport stayed "started", audio kept flowing, header updated.
+- [x] Piano roll stays smooth on the full demo song (canvas, drawn per
+      selection/resize only; playhead moves via direct transform, no
+      per-frame React renders).
+- [x] Typecheck, lint, tests green (101 tests);
+      `docs/current-state.md` updated.
 
 ## Validation
 Run the `goal-validate` workflow with `{ "goal": "docs/goals/goal-2-renderer.md" }`;

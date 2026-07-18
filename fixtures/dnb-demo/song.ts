@@ -1,5 +1,5 @@
 import { automate, bars, ramp } from "@dawai/composer/automation";
-import { arp, chords, euclid, melody, steps } from "@dawai/composer/builders";
+import { arp, chords, euclid, melody } from "@dawai/composer/builders";
 import {
   every,
   humanize,
@@ -16,13 +16,7 @@ import {
   limiter,
   reverb,
 } from "@dawai/composer/fx";
-import {
-  drums,
-  kit,
-  sample,
-  sampler,
-  synth,
-} from "@dawai/composer/instruments";
+import { drums, kit, sampler, synth } from "@dawai/composer/instruments";
 import { section } from "@dawai/composer/section";
 import { bus, duck, song, track } from "@dawai/composer/song";
 
@@ -48,8 +42,10 @@ const hats = humanize(
   { timing: 0.008, velocity: 10, seed: 174 },
 );
 
+// The fill's snare roll deliberately avoids step 13 (the 2-step's main
+// snare) so layered hits never land on the same instant.
 const fill = drums(dnbKit, {
-  snare: "..........o.x.xX",
+  snare: "..........o..xxX",
   crash: "............x...",
 });
 
@@ -81,7 +77,15 @@ const atmosphereArp = velocity(
   arp("Em9", { style: "updown", step: 0.25, octaves: 2 }),
   0.7,
 );
-const breakLoop = steps("x...", "C4", { step: 1, noteLength: 4 });
+// Synthesized break layer (v0 has no sample playback): ghost-snare
+// chatter and a ride pattern riding over the main kit, humanized.
+const breakLoop = humanize(
+  drums(dnbKit, {
+    snare: "..o..o.o...o..o.",
+    ride: "x..x.x..x..x..x.",
+  }),
+  { timing: 0.012, velocity: 14, seed: 99 },
+);
 
 // ── Sections ─────────────────────────────────────────────────────────
 
@@ -169,7 +173,7 @@ export default song({
       out: "drumbus",
       fx: [eq({ low: 1, high: 2 })],
     }),
-    track("breaks", sample("breaks/amen"), {
+    track("breaks", sampler(dnbKit), {
       gain: -10,
       out: "drumbus",
       fx: [filter("highpass", 300)],

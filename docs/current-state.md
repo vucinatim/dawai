@@ -1,10 +1,9 @@
 # Current state
 
-**Goal 1 (Compiler) COMPLETE** — implemented, gates green (100 tests,
-tsc, biome), validated by the `goal-validate` workflow (21 confirmed
-findings triaged: 19 fixed, 2 accepted — see the triage record in
-`docs/goals/goal-1-compiler.md`). Goals 2 (Renderer) and 3 (Loop) not
-started.
+**Goal 1 (Compiler) COMPLETE and validated. Goal 2 (Renderer)
+implemented and gates-green** (101 tests, tsc, biome; Chrome-verified
+visuals, audio, and hot swap) — `goal-validate` triage in progress.
+Goal 3 (Loop) not started.
 
 ## What exists and works
 
@@ -34,10 +33,27 @@ started.
   (tsc + compile + validate, exit 0/1) and `dawai inspect [dir]`
   (arrangement grid default, `--track --bars`, `--mix`, `--stats`,
   `--json`). Standalone — no server exists yet.
+- **`@dawai/ui`** — the preview (Vite + React 19 + Tailwind 4 +
+  shadcn mira preset, dark-only, kebab-case files): Ableton-style
+  layout — control bar (transport, position, tempo, zoom), arrangement
+  (canvas bar ruler with clickable section-loop chips, track lanes with
+  canvas note mini-maps, playhead via direct transform, right-side
+  headers with solo/listen-mute monitoring toggles), bottom detail
+  panel (Device view: instrument/fx/mix modules + routing chips; Clip
+  view: canvas piano roll). State: two zustand stores (document,
+  runtime) with reducer actions + narrow selector hooks;
+  `feedDocument` is the single Document write path (goal-3 WS seam).
+  Audio: Tone.js engine (`src/audio/`) — synth presets via
+  PolySynth(MonoSynth), **synthesized drum voices** for kit pads, fx
+  chains, buses, master limiter, automation lanes incl. duck, seek via
+  pause/reposition/resume, hot swap at the next bar without stopping
+  the transport. Space = play/stop. Dev probes: `__dawai.feedVariant()`
+  / `__dawai.probe()` (destination peak meter).
 - **Fixtures**: `fixtures/dnb-demo` — "Neon Rain", a 136-bar / ~3.1 min
   DnB arrangement exercising the full surface, with golden snapshots
   (Document + all four views), an in-memory determinism test, and a
   cross-execution determinism test (two fresh CLI runs byte-identical).
+  The breaks track is a synthesized layer (no sample playback in v0).
   Edge fixtures: `invalid-song` (validate-stage failure),
   `minimal-song` (empty timeline), `nondeterministic-song`
   (determinism-guard failure).
@@ -53,4 +69,5 @@ started.
 
 ## Next
 
-Goal 2: the Ableton-style preview UI (`docs/goals/goal-2-renderer.md`).
+Goal 3: the live loop — server, watcher, hot reload, `init`/`open`
+(`docs/goals/goal-3-loop.md`).
