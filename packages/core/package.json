@@ -1,0 +1,13 @@
+{
+  "name": "@dawai/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The dawai IR: Document schemas, validation, and pure musical utilities.",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  }
+}

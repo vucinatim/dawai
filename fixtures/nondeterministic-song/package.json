@@ -1,0 +1,12 @@
+{
+  "name": "fixture-nondeterministic-song",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@dawai/composer": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

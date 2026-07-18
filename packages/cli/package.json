@@ -1,0 +1,18 @@
+{
+  "name": "@dawai/cli",
+  "version": "0.0.0",
+  "private": true,
+  "description": "dawai — the agent's non-file interface: check and inspect (standalone half).",
+  "type": "module",
+  "bin": {
+    "dawai": "./src/main.ts"
+  },
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "@dawai/composer": "workspace:*",
+    "@dawai/core": "workspace:*",
+    "commander": "^14.0.0"
+  }
+}
