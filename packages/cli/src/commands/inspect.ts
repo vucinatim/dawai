@@ -1,9 +1,41 @@
 import { barRangeToBeats } from "@dawai/core/time";
+import { validateDocument } from "@dawai/core/validate";
 import { renderArrangement } from "@dawai/core/views/arrangement";
 import { renderMix } from "@dawai/core/views/mix";
 import { renderStats } from "@dawai/core/views/statsView";
 import { renderTrackDetail } from "@dawai/core/views/trackDetail";
-import { loadSong, resolveSongDirectory } from "../loadSong.ts";
+import {
+  type LoadResult,
+  loadSong,
+  resolveSongDirectory,
+} from "../loadSong.ts";
+import { fetchServerDocument } from "./live.ts";
+
+/**
+ * Server-routing: when no explicit directory is given and a live server
+ * is up, reuse its current compile instead of a cold one. Standalone
+ * fallback always preserved.
+ */
+async function loadSongPreferServer(
+  directoryArgument: string | undefined,
+): Promise<LoadResult> {
+  const songDirectory = resolveSongDirectory(directoryArgument);
+  if (directoryArgument === undefined) {
+    const serverDocument = await fetchServerDocument();
+    if (serverDocument !== null) {
+      try {
+        return {
+          ok: true,
+          document: validateDocument(serverDocument),
+          songDirectory,
+        };
+      } catch {
+        // Fall through to a cold compile if the server payload is unusable.
+      }
+    }
+  }
+  return loadSong(songDirectory);
+}
 
 export interface InspectOptions {
   track?: string;
@@ -21,7 +53,7 @@ export async function runInspect(
   directoryArgument: string | undefined,
   options: InspectOptions,
 ): Promise<number> {
-  const result = await loadSong(resolveSongDirectory(directoryArgument));
+  const result = await loadSongPreferServer(directoryArgument);
   if (!result.ok) {
     if (options.json) {
       console.log(

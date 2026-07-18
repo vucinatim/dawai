@@ -13,6 +13,7 @@
   "dependencies": {
     "@dawai/composer": "workspace:*",
     "@dawai/core": "workspace:*",
+    "@dawai/server": "workspace:*",
     "commander": "^14.0.0"
   }
 }

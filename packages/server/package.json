@@ -1,0 +1,15 @@
+{
+  "name": "@dawai/server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The dawai local server: watch, compile, push — the live half of the loop.",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "@dawai/composer": "workspace:*",
+    "@dawai/core": "workspace:*",
+    "hono": "^4.6.0"
+  }
+}

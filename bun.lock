@@ -60,6 +60,7 @@
       "dependencies": {
         "@dawai/composer": "workspace:*",
         "@dawai/core": "workspace:*",
+        "@dawai/server": "workspace:*",
         "commander": "^14.0.0",
       },
     },
@@ -75,6 +76,15 @@
       "version": "0.0.0",
       "dependencies": {
         "zod": "^4.4.3",
+      },
+    },
+    "packages/server": {
+      "name": "@dawai/server",
+      "version": "0.0.0",
+      "dependencies": {
+        "@dawai/composer": "workspace:*",
+        "@dawai/core": "workspace:*",
+        "hono": "^4.6.0",
       },
     },
     "packages/ui": {
@@ -195,6 +205,8 @@
     "@dawai/composer": ["@dawai/composer@workspace:packages/composer"],
 
     "@dawai/core": ["@dawai/core@workspace:packages/core"],
+
+    "@dawai/server": ["@dawai/server@workspace:packages/server"],
 
     "@dawai/ui": ["@dawai/ui@workspace:packages/ui"],
 
