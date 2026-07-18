@@ -57,16 +57,22 @@ Layout (Ableton mapping):
 
 ### Audio rendering (Tone.js, quarantined here)
 - A document-to-audio renderer module: builds Tone nodes from the
-  Document (synth presets, sampler kits, sample clips via repitch,
-  track gain/pan, fx chains, buses, master limiter, automation lanes
-  including duck-generated ones).
+  Document (synth presets, sampler kits, track gain/pan, fx chains,
+  buses, master limiter, automation lanes including duck-generated
+  ones).
+- **Kit pads are synthesized voices, not sample files** (decision
+  2026-07-18): kick/snare/hats/etc. via drum synthesis — zero binary
+  assets, deterministic, no licensing. The kit's pad→pitch mapping in
+  core stays the contract; the renderer maps pads to synthesis recipes.
+- `sample()` audio-clip playback (real files, repitch) moves to Tier 2
+  with the sample-library work; as part of this goal the demo song's
+  `breaks` track is swapped to a synthesized equivalent so the fixture
+  is fully audible.
 - Lookahead-scheduled transport: play/stop, play-from, loop region;
   playhead position streamed to runtime state.
 - Renderer is disposable/rebuildable from a new Document (the hot-swap
   seam Goal 3 relies on) — swapping documents must not require a page
   reload.
-- Starter sample library shipped and resolvable (CC0 one-shots + two
-  breaks) for the sampler/sample paths.
 
 ## Acceptance criteria
 - [ ] Demo Document renders correctly across all views (visual

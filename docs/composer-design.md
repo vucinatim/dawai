@@ -101,7 +101,13 @@ const tracks = [
   (playbackRate = tempo ratio — the classic jungle sound anyway);
   proper time-stretch is designed-for-later.
 
-**Sample library strategy:** v0 ships a curated CC0 starter library
+**Sample strategy (decided 2026-07-18):** v0 kit pads are *synthesized*
+in the renderer (drum-synthesis recipes per pad) — zero assets,
+deterministic, no licensing. Real sample files arrive with Tier 2:
+`sample()` clip playback plus a small CC0 library for breaks/atmos, and
+later `dawai samples search/get` wrapping the Freesound API as an
+agent-operable CLI namespace. The original file-library plan, kept for
+that phase, was: v0 ships a curated CC0 starter library
 (~30 files: kicks, snares, hats, percs, two classic breaks, a few
 atmos) resolved by id, plus whatever lives in the song's `samples/`.
 Later: `dawai samples search/get` wrapping the Freesound API —
