@@ -49,6 +49,16 @@ vocals are samples. Therefore:
 - **Humans swap samples post-hoc** to taste (sound browser); the
   agent's workflow never blocks on sample choice.
 
+**Licensing rule (hard):** anything shipped in the repo must be
+redistributable — verified CC0 packs and **factory samples we generate
+ourselves** (rendered with dawai's own synthesis/resampling pipeline,
+owned outright). Commercial pack subscriptions (Splice etc.) are
+licensed for *use in musical works only*, never redistribution: they
+live in the user's local `samples/` folder (gitignored), are fully fine
+in released tracks, and never enter the repo. Later convenience:
+indexing the user's local Splice folder so the agent can browse their
+licensed sounds — user-side only.
+
 ## Resampling as a first-class primitive (the modern workflow)
 
 Modern bass design is literally: synthesize → render to audio →
