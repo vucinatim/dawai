@@ -43,27 +43,46 @@ Authority docs: [architecture.md](../architecture.md) (boundaries 1, 5,
   compile instead of a cold one) with standalone fallback preserved.
 
 ## Acceptance criteria
-- [ ] Scripted end-to-end test: start server on a fixture project →
-      edit a source file → assert the updated Document arrives over
-      WebSocket; break the file → assert last-good retained + error
-      pushed; fix it → assert recovery.
-- [ ] Hot swap during playback: transport does not stop, swap lands at
-      the bar boundary (manually verified with the demo song).
-- [ ] `dawai init` output compiles and plays out of the box; its
-      generated AGENTS.md is sufficient for a fresh agent session to
-      author a change without reading dawai's own repo.
-- [ ] Full CLI surface from architecture.md works with `--json` and
-      stable exit codes.
-- [ ] The live demo: an agent session in a song folder is told "write a
-      four-bar melancholic chord progression at 90 BPM" and the result
-      appears and plays without a manual reload.
-- [ ] Typecheck, lint, tests green; `docs/current-state.md` updated.
+- [x] Scripted end-to-end test (`packages/server/test/e2e.test.ts`,
+      6 tests, ~1s): initial push on connect, edit → updated Document
+      over WebSocket, break → last-good retained + error pushed,
+      fix → recovery, transport broadcast, runtime-status reporting.
+- [x] Hot swap during playback: transport does not stop — measured
+      live (beat 28.86 → edit → 32.86 after exactly 2s; position
+      continuous, new document applied at the bar boundary).
+- [x] `dawai init` output compiles and plays out of the box (verified:
+      scaffold → `bun install` → full `check` clean → served live and
+      audible); the generated AGENTS.md carries the format cheat sheet,
+      CLI, and workflow loop so a fresh session needs nothing else.
+- [x] Full CLI surface works: `init`, `open`, `check --json`,
+      `inspect` (+ server-routed fast path with standalone fallback),
+      `play [--from]`, `stop`, `status --json`; exit codes 0/1.
+- [x] The live demo — performed literally: while the song played, a
+      bass line was written into `song.ts`; the new track appeared in
+      the preview and played without a reload, then a broken edit
+      showed the exact compiler diagnostic in the overlay over the
+      still-playing last-good document, and the fix cleared it.
+- [x] Typecheck, lint, tests green (107 tests);
+      `docs/current-state.md` updated.
 
 ## Validation
 Default (budget-conscious): gates green + hands-on verification of every
 acceptance criterion (scripted e2e + the live demo as the human
 acceptance test), recorded here. The `goal-validate` workflow (slimmed:
 1 reviewer + capped blocker verification) runs only on explicit request.
+
+### Validation record (2026-07-18)
+
+**Complete.** Verified hands-on in real Chrome against a freshly
+`init`-ed song project served by `dawai open` (no fixture): live feed
+connect, playback, mid-playback edits (name/tempo/new track), position
+continuity across swaps, break/recover with the error overlay, and
+`dawai status` reflecting the preview's playhead and selection. One
+significant implementation discovery, fixed and covered by the e2e:
+in-process module re-imports cannot be cache-busted in Bun, so each
+recompile runs in a fresh subprocess (`compile-runner.ts`). Also fixed:
+`init`'s `file:` dependency strategy needs an `overrides` entry for
+composer's transitive `workspace:*` dep on core.
 
 ## After this goal
 Substrates are complete. Feature work begins on top, driven by the

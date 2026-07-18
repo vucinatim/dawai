@@ -52,18 +52,25 @@ framework). Progress lives in [docs/current-state.md](docs/current-state.md).
 
 ## Status
 
-Early and moving. Goal 1 of 3 (the compiler substrate) is complete:
-`@dawai/core` (the IR), `@dawai/composer` (the authoring API), and the
-`dawai check` / `dawai inspect` CLI — 100 tests, deterministic compiles
-enforced by a runtime guard, golden-snapshot fixtures including a full
-3-minute drum & bass demo song. Next: the preview UI, then the live
-hot-reload loop.
+All three substrate goals are complete — the loop works end to end:
+edit `song.ts` while the song plays and the preview hot-swaps at the
+next bar without stopping. Built: `@dawai/core` (the IR),
+`@dawai/composer` (the authoring API), `@dawai/cli`
+(`init`/`check`/`inspect`/`open`/`play`/`status`), `@dawai/server`
+(watch → recompile → WebSocket push, last-good semantics), and
+`@dawai/ui` (Ableton-style preview with a Tone.js renderer and
+synthesized instruments) — 107 tests, deterministic compiles enforced
+by a runtime guard. Next: sound quality (deeper synthesis, presets,
+transition craft, sample playback).
 
 ```bash
-bun install
-bun test
-bun packages/cli/src/main.ts check fixtures/dnb-demo
-bun packages/cli/src/main.ts inspect fixtures/dnb-demo --stats
+bun install && bun test
+
+# author a song
+bun packages/cli/src/main.ts init my-song && cd my-song && bun install
+bun ../packages/cli/src/main.ts open          # server on :4400
+bun run --cwd ../packages/ui dev              # preview on :5173
+# …edit song.ts and listen. dawai check / inspect / play / status all work.
 ```
 
 ## License

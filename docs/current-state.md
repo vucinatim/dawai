@@ -1,17 +1,16 @@
 # Current state
 
-**Goals 1 (Compiler) and 2 (Renderer) COMPLETE** — gates green
-(101 tests, tsc, biome); goal 1 validated by the agent-fleet workflow,
-goal 2 by direct empirical verification + human pass (see validation
-records in `docs/goals/`). Validation process is now budget-conscious:
-gates + hands-on verification by default; the slimmed `goal-validate`
-workflow only on explicit request. Goal 3 (Loop) not started.
+**ALL THREE SUBSTRATE GOALS COMPLETE** (Compiler, Renderer, Loop) —
+gates green (107 tests, tsc, biome), each with a validation record in
+its spec under `docs/goals/`. The product works end to end: edit
+`song.ts` while the song plays and the preview hot-swaps at the next
+bar without stopping. Feature work (sound quality, Tier 2) is next.
 
 ## What exists and works
 
 - **Monorepo**: bun workspaces (`packages/*`, `fixtures/*`), strict
   TypeScript (single root `tsc --noEmit`), Biome, `bun test`. All three
-  gates green: 100 tests, 0 type errors, 0 lint errors. Purity
+  gates green: 107 tests, 0 type errors, 0 lint errors. Purity
   boundaries enforced by test (`boundaries.test.ts`); the determinism
   guard (`composer/determinism.ts`) fails `check` on Math.random/
   Date.now/performance.now in song source.
@@ -31,10 +30,18 @@ workflow only on explicit request. Goal 3 (Loop) not started.
   notes → duck automation lane, release-truncation handled),
   `automate`/`ramp`/`bars`, and `compile()` → validated Document.
   Deterministic by construction (mulberry32, seeds only).
-- **`@dawai/cli`** — `dawai check [dir] [--json] [--skip-typecheck]`
-  (tsc + compile + validate, exit 0/1) and `dawai inspect [dir]`
-  (arrangement grid default, `--track --bars`, `--mix`, `--stats`,
-  `--json`). Standalone — no server exists yet.
+- **`@dawai/server`** — the live half: `CompileSession` (fresh
+  subprocess per recompile via `compile-runner.ts` — Bun can't
+  cache-bust in-process re-imports; last-good semantics), recursive
+  watcher (debounced), WebSocket hub pushing documents/errors/transport
+  and receiving throttled runtime snapshots, Hono HTTP
+  (`/api/status|document|transport|health`), serves a built UI. Wire
+  contract in `@dawai/core/protocol`.
+- **`@dawai/cli`** — `check [--json] [--skip-typecheck]`, `inspect`
+  (server-routed fast path, standalone fallback), `init <name>`
+  (song-project scaffold: `file:` deps + overrides, starter song,
+  generated AGENTS.md authoring manual), `open [--port]`,
+  `play [--from <bar>]`, `stop`, `status --json`.
 - **`@dawai/ui`** — the preview (Vite + React 19 + Tailwind 4 +
   shadcn mira preset, dark-only, kebab-case files): Ableton-style
   layout — control bar (transport, position, tempo, zoom), arrangement
@@ -71,5 +78,7 @@ workflow only on explicit request. Goal 3 (Loop) not started.
 
 ## Next
 
-Goal 3: the live loop — server, watcher, hot reload, `init`/`open`
-(`docs/goals/goal-3-loop.md`).
+Substrates are done. Feature work on top, roughly in order of audible
+payoff (see composer-design.md Tier 2): deeper synthesis recipes and
+presets, transition craft (risers, sweeps, fills, crashes), sample
+playback + a small CC0 library, duck tuning, `dawai analyze`.
