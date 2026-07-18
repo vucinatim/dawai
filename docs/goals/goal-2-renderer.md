@@ -27,7 +27,9 @@ Layout (Ableton mapping):
   locators) above stacked track lanes with clip blocks (note-density
   visualization); horizontal scroll + zoom across the full track;
   **track headers on the right, Ableton-style** (name, instrument
-  badge, mute state, gain readout).
+  badge, gain readout, and interactive **solo / listen-mute toggles** —
+  runtime monitoring state driving renderer gains, never the Document;
+  authored `mute` from source renders as a visually distinct state).
 - **Bottom — detail panel**, toggling like Ableton's:
   - **Device view**: the selected track's instrument + fx chain laid
     out horizontally as device modules (params read-only), plus bus
