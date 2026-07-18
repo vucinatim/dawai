@@ -49,3 +49,44 @@ export function useSongLengthBeats(): number {
     state.document ? documentLengthBeats(state.document) : 0,
   );
 }
+
+export type ArrangementRow =
+  | { kind: "track"; track: Track }
+  | { kind: "bus"; bus: Bus }
+  | { kind: "master" };
+
+/**
+ * Ableton-style row order: tracks clustered under the bus they route
+ * to (bus row closing each cluster), then master-routed tracks, then
+ * the master row. Memoized per document revision.
+ */
+export function useArrangementRows(): ArrangementRow[] {
+  return useDocumentStore((state) => {
+    if (!state.document) return EMPTY_ROWS;
+    if (rowsCacheRevision !== state.revision) {
+      const { tracks, buses } = state.document;
+      const rows: ArrangementRow[] = [];
+      for (const bus of buses) {
+        for (const track of tracks.filter(
+          (candidate) => candidate.out === bus.id,
+        )) {
+          rows.push({ kind: "track", track });
+        }
+        rows.push({ kind: "bus", bus });
+      }
+      for (const track of tracks.filter(
+        (candidate) => candidate.out === "master",
+      )) {
+        rows.push({ kind: "track", track });
+      }
+      rows.push({ kind: "master" });
+      rowsCache = rows;
+      rowsCacheRevision = state.revision;
+    }
+    return rowsCache;
+  });
+}
+
+const EMPTY_ROWS: ArrangementRow[] = [];
+let rowsCache: ArrangementRow[] = EMPTY_ROWS;
+let rowsCacheRevision = -1;

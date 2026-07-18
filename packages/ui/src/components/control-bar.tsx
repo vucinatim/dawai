@@ -1,5 +1,6 @@
 import { formatBarBeat } from "@dawai/core/time";
 import {
+  LocateFixedIcon,
   PlayIcon,
   RepeatIcon,
   SquareIcon,
@@ -12,24 +13,43 @@ import { cn } from "@/lib/utils";
 import { useDocumentStore } from "@/stores/document-store";
 import { useIsPlaying, useLoop, useRuntimeStore } from "@/stores/runtime-store";
 
-/** Ableton's control bar: transport left of center, song facts as data. */
+/** Ableton's control bar: song facts left, transport dead center. */
 export function ControlBar() {
   return (
-    <header className="flex h-10 shrink-0 items-center gap-4 border-b px-3">
-      <span className="text-xs font-semibold tracking-wide text-muted-foreground">
-        dawai
-      </span>
+    <header className="grid h-10 shrink-0 grid-cols-[1fr_auto_1fr] items-center border-b px-3">
+      <div className="flex items-center gap-4">
+        <span className="text-xs font-semibold tracking-wide text-muted-foreground">
+          dawai
+        </span>
+        <SongFacts />
+      </div>
       <div className="flex items-center gap-1">
         <PlayButton />
         <StopButton />
         <LoopButton />
+        <PositionReadout />
       </div>
-      <PositionReadout />
-      <SongFacts />
-      <div className="ml-auto flex items-center gap-1">
+      <div className="flex items-center justify-end gap-1">
+        <FollowButton />
         <ZoomButtons />
       </div>
     </header>
+  );
+}
+
+function FollowButton() {
+  const following = useRuntimeStore((state) => state.followPlayhead);
+  return (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      aria-label="Follow playhead"
+      aria-pressed={following}
+      className={cn(following && "text-daw-accent")}
+      onClick={() => useRuntimeStore.getState().actions.toggleFollowPlayhead()}
+    >
+      <LocateFixedIcon />
+    </Button>
   );
 }
 

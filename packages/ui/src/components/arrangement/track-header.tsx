@@ -26,47 +26,53 @@ export function TrackHeader({ trackId }: { trackId: string }) {
   return (
     <div
       className={cn(
-        "flex h-14 flex-col justify-between border-b px-2 py-1.5",
+        "relative h-14 border-b",
         isSelected ? "bg-accent" : "hover:bg-accent/50",
         track.mute && "opacity-50",
       )}
     >
-      <div className="flex items-center justify-between gap-1">
-        <button
-          type="button"
-          className="min-w-0 flex-1 cursor-default truncate text-left text-xs font-medium focus-visible:outline-1 focus-visible:outline-ring"
-          onClick={() => actions.selectTrack(trackId)}
-          onKeyDown={(event) => {
-            if (event.key === "s") actions.toggleSolo(trackId);
-            if (event.key === "m") actions.toggleListenMute(trackId);
-          }}
-        >
-          {track.name}
-        </button>
-        <div className="flex gap-0.5">
-          <MonitorToggle
-            label="S"
-            title="Solo (monitoring only)"
-            active={isSoloed}
-            onToggle={() => actions.toggleSolo(trackId)}
-          />
-          <MonitorToggle
-            label="M"
-            title="Listen-mute (monitoring only)"
-            active={isListenMuted}
-            onToggle={() => actions.toggleListenMute(trackId)}
-          />
+      {/* The whole rectangle selects the track; content floats above,
+          with only the S/M toggles re-enabling pointer events. */}
+      <button
+        type="button"
+        aria-label={`Select track ${track.name}`}
+        className="absolute inset-0 cursor-default focus-visible:outline-1 focus-visible:outline-ring"
+        onClick={() => actions.selectTrack(trackId)}
+        onKeyDown={(event) => {
+          if (event.key === "s") actions.toggleSolo(trackId);
+          if (event.key === "m") actions.toggleListenMute(trackId);
+        }}
+      />
+      <div className="pointer-events-none relative flex h-full flex-col justify-between px-2 py-1.5">
+        <div className="flex items-center justify-between gap-1">
+          <span className="min-w-0 flex-1 truncate text-xs font-medium">
+            {track.name}
+          </span>
+          <div className="pointer-events-auto flex gap-0.5">
+            <MonitorToggle
+              label="S"
+              title="Solo (monitoring only)"
+              active={isSoloed}
+              onToggle={() => actions.toggleSolo(trackId)}
+            />
+            <MonitorToggle
+              label="M"
+              title="Listen-mute (monitoring only)"
+              active={isListenMuted}
+              onToggle={() => actions.toggleListenMute(trackId)}
+            />
+          </div>
         </div>
-      </div>
-      <div className="flex items-center justify-between gap-1">
-        <span className="truncate font-mono text-[9px] text-muted-foreground">
-          {instrumentLabel(track.instrument)}
-          {track.mute && " · muted"}
-        </span>
-        <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
-          {track.gain > 0 ? "+" : ""}
-          {track.gain}dB
-        </span>
+        <div className="flex items-center justify-between gap-1">
+          <span className="truncate font-mono text-[9px] text-muted-foreground">
+            {instrumentLabel(track.instrument)}
+            {track.mute && " · muted"}
+          </span>
+          <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
+            {track.gain > 0 ? "+" : ""}
+            {track.gain}dB
+          </span>
+        </div>
       </div>
     </div>
   );

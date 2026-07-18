@@ -38,6 +38,9 @@ interface RuntimeState {
   listenMutedTrackIds: string[];
   /** Horizontal zoom of the arrangement. */
   pixelsPerBeat: number;
+  /** True once the user zoomed manually — fit-to-width stops overriding. */
+  hasUserZoomed: boolean;
+  followPlayhead: boolean;
   compileError: CompileErrorState | null;
   actions: {
     setPlaying: (isPlaying: boolean) => void;
@@ -51,6 +54,9 @@ interface RuntimeState {
     toggleSolo: (trackId: string) => void;
     toggleListenMute: (trackId: string) => void;
     zoomBy: (factor: number) => void;
+    fitZoom: (pixelsPerBeat: number) => void;
+    toggleFollowPlayhead: () => void;
+    setFollowPlayhead: (followPlayhead: boolean) => void;
     setCompileError: (error: CompileErrorState | null) => void;
   };
 }
@@ -72,6 +78,8 @@ export const useRuntimeStore = create<RuntimeState>()((set) => ({
   soloedTrackIds: [],
   listenMutedTrackIds: [],
   pixelsPerBeat: 6,
+  hasUserZoomed: false,
+  followPlayhead: true,
   compileError: null,
   actions: {
     setPlaying: (isPlaying) => set({ isPlaying }),
@@ -101,11 +109,18 @@ export const useRuntimeStore = create<RuntimeState>()((set) => ({
       })),
     zoomBy: (factor) =>
       set((state) => ({
+        hasUserZoomed: true,
         pixelsPerBeat: Math.min(
           48,
-          Math.max(1.5, state.pixelsPerBeat * factor),
+          Math.max(0.5, state.pixelsPerBeat * factor),
         ),
       })),
+    /** Fit-to-width zoom applied on load — doesn't count as user zoom. */
+    fitZoom: (pixelsPerBeat) =>
+      set({ pixelsPerBeat: Math.min(48, Math.max(0.5, pixelsPerBeat)) }),
+    toggleFollowPlayhead: () =>
+      set((state) => ({ followPlayhead: !state.followPlayhead })),
+    setFollowPlayhead: (followPlayhead) => set({ followPlayhead }),
     setCompileError: (compileError) => set({ compileError }),
   },
 }));

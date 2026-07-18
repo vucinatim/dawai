@@ -4,23 +4,23 @@ Living backlog, roughly ordered inside each group. Feature *goals* still
 get a spec in `docs/goals/` when they start; this file tracks everything
 smaller and the queue itself. (Substrate goals 1–3: done.)
 
-## UI polish (quick fixes — next up)
+## UI polish (quick fixes — DONE 2026-07-18)
 
-- [ ] Fit-to-width default zoom: short songs should span the viewport;
+- [x] Fit-to-width default zoom: short songs should span the viewport;
       lane backgrounds/grid extend across the full visible area.
-- [ ] Track headers: the entire rectangle selects the track (not just
+- [x] Track headers: the entire rectangle selects the track (not just
       the name), S/M toggles still click independently.
-- [ ] Bus + master rows in the arrangement (Ableton-style): tracks
+- [x] Bus + master rows in the arrangement (Ableton-style): tracks
       cluster under the bus they route to; rows are clipless,
       selectable → open their chain in the device panel.
-- [ ] Piano roll playhead: transform-driven line when the playing
+- [x] Piano roll playhead: transform-driven line when the playing
       position is inside the selected clip.
-- [ ] Pinch-zoom bug: React's `onWheel` is passive so `preventDefault`
+- [x] Pinch-zoom bug: React's `onWheel` is passive so `preventDefault`
       can't stop macOS page zoom — attach a native non-passive wheel
       listener for ctrl/pinch zoom.
-- [ ] Follow-playhead mode (toggle in control bar; auto-scroll keeps
+- [x] Follow-playhead mode (toggle in control bar; auto-scroll keeps
       the playhead in view, Ableton-style).
-- [ ] Transport controls top-center in the control bar.
+- [x] Transport controls top-center in the control bar.
 
 ## UI features
 
