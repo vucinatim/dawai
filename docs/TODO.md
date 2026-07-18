@@ -66,6 +66,24 @@ smaller and the queue itself. (Substrate goals 1–3: done.)
 - [ ] Enabler for E2/E3 precision: compile with provenance (source
       locations attached to Document values) — additive IR metadata.
 
+## Extensibility / plugin layer (design intent — shape for it now,
+   build later; the composition layer is ALREADY open: patterns,
+   combinators, generators, and toolkits are plain TS modules any song
+   can import, e.g. a published `dawai-liquid-toolkit`)
+
+- [ ] During the L1 sprint: renderer instrument/fx construction becomes
+      registry-driven internally (table, not switch) — the future
+      plugin registry is then just external entries.
+- [ ] Song-level custom presets/kits as validated data (inline preset
+      definitions in the IR, not just built-in ids) — 80% of "custom
+      synths" for solo users.
+- [ ] Full plugin layer when dawai-as-dependency demands it: plugin =
+      module exporting a descriptor (id + zod params schema → IR
+      `{ type: "plugin", pluginId, params }` variant) + a renderer
+      factory; server serves plugin bundles, UI dynamic-imports and
+      registers; `dawai plugin new` scaffold; documented in generated
+      AGENTS.md (the typical plugin author is an agent).
+
 ## Someday / ideas
 
 - [ ] Parameterized songs (`song((params) => ...)`) — runtime inputs,
