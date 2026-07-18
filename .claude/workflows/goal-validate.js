@@ -1,18 +1,17 @@
 export const meta = {
   name: "goal-validate",
-  description: "Adversarial multi-lens validation of a completed dawai goal",
+  description: "Lean adversarial validation of a completed dawai goal (budget-conscious)",
   whenToUse:
-    "At the end of each goal in docs/goals/, before declaring it complete",
+    "Optional heavy check at the end of a goal — the default validation is gates + main-loop self-review; run this only when explicitly requested.",
   phases: [
-    { title: "Review", detail: "four independent lenses over the goal scope" },
-    { title: "Verify", detail: "adversarial refutation of every finding" },
+    { title: "Review", detail: "one reviewer, all lenses" },
+    { title: "Verify", detail: "one refuter per blocker (capped)" },
   ],
 };
 
 const parsedArguments = typeof args === "string" ? JSON.parse(args) : args;
 const goalSpec = parsedArguments?.goal;
-if (!goalSpec)
-  throw new Error('Pass { goal: "docs/goals/goal-N-*.md" } as args');
+if (!goalSpec) throw new Error('Pass { goal: "docs/goals/goal-N-*.md" } as args');
 
 const FINDINGS_SCHEMA = {
   type: "object",
@@ -20,6 +19,7 @@ const FINDINGS_SCHEMA = {
   properties: {
     findings: {
       type: "array",
+      maxItems: 10,
       items: {
         type: "object",
         required: ["file", "summary", "evidence", "severity"],
@@ -27,10 +27,7 @@ const FINDINGS_SCHEMA = {
           file: { type: "string" },
           line: { type: "number" },
           summary: { type: "string" },
-          evidence: {
-            type: "string",
-            description: "concrete code/output proving the issue",
-          },
+          evidence: { type: "string" },
           severity: { enum: ["blocker", "should-fix", "nit"] },
         },
       },
@@ -41,110 +38,38 @@ const FINDINGS_SCHEMA = {
 const VERDICT_SCHEMA = {
   type: "object",
   required: ["refuted", "reasoning"],
-  properties: {
-    refuted: { type: "boolean" },
-    reasoning: { type: "string" },
-  },
+  properties: { refuted: { type: "boolean" }, reasoning: { type: "string" } },
 };
 
-const COMMON = `You are validating a completed goal in the dawai repo
+const review = await agent(
+  `You are validating a completed goal in the dawai repo
 (/Users/timvucina/Desktop/MyProjects/dawai). Read the goal spec at
-${goalSpec}, then docs/architecture.md and docs/composer-design.md.
-Investigate the actual code and run real commands (bun test, typecheck,
-the CLI) — never trust claims in docs or comments over observed
-behavior. Report only defects you can evidence concretely; no
-style-preference noise.`;
-
-const LENSES = [
-  {
-    key: "boundaries",
-    prompt: `${COMMON}
-LENS: architecture boundary compliance. For every numbered boundary in
-docs/architecture.md that applies to this goal's packages, hunt for
-violations: UI code paths that mutate the Document, Tone.js (or any
-audio) imports outside packages/ui, nondeterminism in compile paths
-(Date.now, Math.random, unseeded generators, IO), Document truth held
-anywhere but its canonical home, editing surfaces that bypass source
-files. Also flag boundaries enforced only by convention where a test or
-lint rule was feasible.`,
-  },
-  {
-    key: "contract",
-    prompt: `${COMMON}
-LENS: acceptance-criteria honesty. Take the goal spec's acceptance
-checklist literally and verify each item is genuinely met, not
-approximately: run the test suite and read the tests (do snapshot tests
-actually assert determinism? do error-path tests assert messages, not
-just throws?), run the CLI commands and inspect their real output,
-check exit codes and --json shapes. Flag any criterion that is
-unchecked, weakly checked, or checked by a test that would pass even if
-the feature were broken.`,
-  },
-  {
-    key: "api-taste",
-    prompt: `${COMMON}
-LENS: composer API fidelity and ergonomics. Compare the implemented
-authoring surface against docs/composer-design.md: missing or renamed
-primitives, signatures that drifted from the doc, doc examples that no
-longer compile as written. Then judge ergonomics as an agent-author
-would: write (mentally compile) a short original song against the real
-API and flag anything verbose, surprising, or trap-laden — wrong
-defaults, unit confusion (beats vs bars vs dB), combinators that don't
-compose. Fidelity findings need code evidence; ergonomic findings need
-a concrete better alternative.`,
-  },
-  {
-    key: "quality",
-    prompt: `${COMMON}
-LENS: exemplary-codebase bar. This repo intends to be a reference-grade
-codebase. Hunt for: shallow modules (wrappers that just forward),
-duplicated logic with two sources of truth, dead code, swallowed
-errors or fallback values that hide bugs, abstractions with a single
-caller that earn nothing, cross-package imports that violate the
-dependency direction (core ← composer ← cli/server/ui), and misleading
-names. Ignore formatting and comment style; Biome owns those.`,
-  },
-];
-
-const results = await pipeline(
-  LENSES,
-  (lens) =>
-    agent(lens.prompt, {
-      label: `review:${lens.key}`,
-      phase: "Review",
-      schema: FINDINGS_SCHEMA,
-    }),
-  (review, lens) =>
-    parallel(
-      (review?.findings ?? []).map(
-        (f) => () =>
-          agent(
-            `${COMMON}
-Adversarially verify this ${lens.key} finding — your job is to REFUTE it.
-Reproduce the evidence yourself; if you cannot reproduce it, or the code
-handles it correctly, or the goal spec explicitly scopes it out, it is
-refuted. Finding: ${JSON.stringify(f)}`,
-            {
-              label: `verify:${f.file}`,
-              phase: "Verify",
-              schema: VERDICT_SCHEMA,
-            },
-          ).then((v) => ({ ...f, lens: lens.key, verdict: v })),
-      ),
-    ),
+${goalSpec}, docs/architecture.md, and docs/composer-design.md, then
+investigate the code and run real commands (bun test, typecheck, the
+CLI). Review through ALL of these lenses at once, but report ONLY
+high-confidence, evidenced defects — at most 10, ranked by severity:
+(1) architecture boundary violations enforced by neither code nor test;
+(2) acceptance-criteria items that are unmet or covered by tests that
+would pass even if broken; (3) implementation drift from the design
+docs; (4) real correctness bugs. Skip style, taste, and speculation.
+Every finding needs concrete evidence you produced yourself.`,
+  { label: "review:all-lenses", phase: "Review", schema: FINDINGS_SCHEMA },
 );
 
-const confirmed = results
-  .flat()
-  .filter(Boolean)
-  .filter((f) => f.verdict && !f.verdict.refuted)
-  .sort(
-    (a, b) =>
-      ["blocker", "should-fix", "nit"].indexOf(a.severity) -
-      ["blocker", "should-fix", "nit"].indexOf(b.severity),
-  );
-
-log(
-  `${confirmed.length} confirmed findings (of ${results.flat().filter(Boolean).length} raw)`,
+const blockers = (review?.findings ?? []).filter((f) => f.severity === "blocker").slice(0, 3);
+const verified = await parallel(
+  blockers.map((finding) => () =>
+    agent(
+      `In the dawai repo (/Users/timvucina/Desktop/MyProjects/dawai), try to
+REFUTE this finding by reproducing its evidence yourself. Read-only
+investigation plus running tests/CLI; do not modify tracked files.
+If you cannot reproduce it, it is refuted. Finding: ${JSON.stringify(finding)}`,
+      { label: `verify:${finding.file}`, phase: "Verify", schema: VERDICT_SCHEMA, effort: "low" },
+    ).then((verdict) => ({ ...finding, verdict })),
+  ),
 );
-return { goal: goalSpec, confirmed }
+
+const confirmedBlockers = verified.filter(Boolean).filter((f) => f.verdict && !f.verdict.refuted);
+const rest = (review?.findings ?? []).filter((f) => f.severity !== "blocker");
+log(`${confirmedBlockers.length} confirmed blockers, ${rest.length} unverified lesser findings`);
+return { goal: goalSpec, confirmedBlockers, unverified: rest };

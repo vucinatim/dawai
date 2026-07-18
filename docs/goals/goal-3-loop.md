@@ -60,9 +60,10 @@ Authority docs: [architecture.md](../architecture.md) (boundaries 1, 5,
 - [ ] Typecheck, lint, tests green; `docs/current-state.md` updated.
 
 ## Validation
-Run the `goal-validate` workflow with `{ "goal": "docs/goals/goal-3-loop.md" }`;
-then the live demo above as the human acceptance test. Triage findings
-to zero or explicit accepted-risk notes here.
+Default (budget-conscious): gates green + hands-on verification of every
+acceptance criterion (scripted e2e + the live demo as the human
+acceptance test), recorded here. The `goal-validate` workflow (slimmed:
+1 reviewer + capped blocker verification) runs only on explicit request.
 
 ## After this goal
 Substrates are complete. Feature work begins on top, driven by the

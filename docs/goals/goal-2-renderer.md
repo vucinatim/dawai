@@ -108,3 +108,24 @@ Layout (Ableton mapping):
 Run the `goal-validate` workflow with `{ "goal": "docs/goals/goal-2-renderer.md" }`;
 then a human look-and-listen pass on the demo song. Triage findings to
 zero or explicit accepted-risk notes here.
+
+### Validation record (2026-07-18)
+
+**Complete.** Validated by direct empirical verification instead of the
+agent fleet (process change: the goal-1 fleet cost ~1.3M tokens; from
+goal 2 on, the default gate is gates + hands-on verification, with the
+slimmed `goal-validate` workflow reserved for explicit request):
+
+- All gates green (101 tests, tsc, biome); boundary and edit-path
+  audits run by grep/test, recorded in the acceptance checklist above.
+- Chrome-verified with measured audio: destination peak meter, seek,
+  loop, monitoring isolation (muted = exactly 0), and the mid-playback
+  document hot swap (140 BPM variant, transport never stopped).
+- Two real bugs found and fixed during verification: simultaneous
+  layered triggers on a mono drum voice (Tone throws), and in-place
+  transport seeks corrupting scheduled parts (now
+  pause/reposition/resume).
+- **Human look-and-listen pass: passed** ("nearly perfect"); the noted
+  gaps — thin synthesis, missing risers/fills/transition craft — are
+  Tier-2/3 sound-quality work already on the composer-design checklist,
+  not renderer defects.

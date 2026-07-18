@@ -1,9 +1,11 @@
 # Current state
 
-**Goal 1 (Compiler) COMPLETE and validated. Goal 2 (Renderer)
-implemented and gates-green** (101 tests, tsc, biome; Chrome-verified
-visuals, audio, and hot swap) — `goal-validate` triage in progress.
-Goal 3 (Loop) not started.
+**Goals 1 (Compiler) and 2 (Renderer) COMPLETE** — gates green
+(101 tests, tsc, biome); goal 1 validated by the agent-fleet workflow,
+goal 2 by direct empirical verification + human pass (see validation
+records in `docs/goals/`). Validation process is now budget-conscious:
+gates + hands-on verification by default; the slimmed `goal-validate`
+workflow only on explicit request. Goal 3 (Loop) not started.
 
 ## What exists and works
 
