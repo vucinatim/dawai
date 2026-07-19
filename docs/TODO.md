@@ -37,8 +37,9 @@ smaller and the queue itself. (Substrate goals 1–3: done.)
        layered custom voices, reese/supersaw recipes, upgraded drum
        voices, OTT-style multiband bus glue, transition idioms
        (`riser`/`sweep`/`impact`, richer fills), duck tuning;
-       re-author Neon Rain as the benchmark. (Goal 4 — objective pass
-       done; human listening rounds pending.)
+       re-author Neon Rain as the benchmark. (Goal 4 — CLOSED, pass.
+       Listening verdict: sound clearly fuller; the bottleneck moved
+       to composition/melody craft — see below.)
 2. [ ] **Sample playback + curated CC0 starter library** (hybrid
        thesis: drums/FX from samples, tonal layer from synthesis);
        sound browser as the human swap surface; later
@@ -50,6 +51,20 @@ smaller and the queue itself. (Substrate goals 1–3: done.)
        deterministic OfflineAudioContext render at compile-render time.
 5. [ ] **L2/L3 synth engine** (AudioWorklet → Faust/WASM; Vital as the
        ceiling reference) — its own epic.
+
+## Composition / musicality craft (new bottleneck after goal 4 —
+   the sound is fuller but Neon Rain v2's arrangement and melodies
+   were judged messy; the weakest link is now what gets written, not
+   how it sounds)
+
+- [ ] Melody/harmony craft: stronger motif discipline (theme, repeat,
+      vary), tension-release phrasing, call-and-response between
+      tracks; possibly composer helpers (motif(), answer(), cadence()).
+- [ ] Arrangement clarity: fewer elements at once, register separation,
+      frequency-slot planning per section (who owns lows/mids/highs),
+      intentional space — less is more as an authoring guideline in
+      the generated AGENTS.md.
+- [ ] Reference-informed authoring checklists per genre (dnb first).
 
 ## Product direction: user editability (staged; boundary 1 already
    anticipates it — every edit writes through the source)

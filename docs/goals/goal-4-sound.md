@@ -151,7 +151,18 @@ supersaw 0.31, warm-pad 2.80, pluck 0.15 — all four plainly moving.
 Transport stability: drop looped 16 s at 1.0× realtime; buildup → drop
 boundary (riser + impact + sweep + full drop spin-up) at 1.0×.
 
-Listening round: handed to the human (protocol above) — pending.
+## Validation record — listening round (2026-07-19)
+
+- **Sound Tour**: all presets and pads rated *keep* — no fixes
+  requested.
+- **Neon Rain v2**: sound judged clearly fuller than v1 (the L1
+  sprint's goal); transitions and pump work. The *composition* was
+  judged the new weak point — "messy, kinda shitty melody" — i.e. the
+  bottleneck moved from sound quality to arrangement/melody craft.
+  That is authoring-layer musicality, out of L1 scope, and now the
+  headline item for future work alongside the sample goal.
+
+**GOAL 4 CLOSED — pass.**
 
 ## Explicitly out of scope (queued behind this goal)
 

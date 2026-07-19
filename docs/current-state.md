@@ -4,9 +4,10 @@
 green (114 tests, tsc, biome), each goal with a validation record in
 its spec under `docs/goals/`. The product works end to end: edit
 `song.ts` while the song plays and the preview hot-swaps at the next
-bar without stopping. Goal 4's objective validation passed (audition
-probe: nothing silent, no clipping, filter movement measured); the
-human listening rounds are the remaining gate.
+bar without stopping. Goal 4 is CLOSED (objective pass + human
+listening round): every sound-tour entry rated keep; Neon Rain v2
+judged clearly fuller than v1. The listening round moved the
+bottleneck to composition/melody craft (see TODO).
 
 ## What exists and works
 
@@ -91,9 +92,8 @@ human listening rounds are the remaining gate.
 
 ## Next
 
-Goal 4's human listening rounds (sound-tour + Neon Rain v2, per-sound
-keep/fix verdicts, iterate via hot reload). Then, in order of audible
-payoff (see docs/sound-design.md delivery order): sample playback + a
-CC0 starter library + sound browser (goal 5), `dawai render` + numeric
-ears (goal 6), resampling primitive, automation-lane UI, E1
-editability.
+In order of audible payoff (see docs/sound-design.md delivery order
+and TODO.md): composition/melody craft (the new bottleneck), sample
+playback + a CC0 starter library + sound browser (goal 5),
+`dawai render` + numeric ears (goal 6), resampling primitive,
+automation-lane UI, E1 editability.
