@@ -62,6 +62,17 @@
         "typescript": "^5.9.3",
       },
     },
+    "fixtures/tech-house": {
+      "name": "fixture-tech-house",
+      "version": "0.0.0",
+      "dependencies": {
+        "@dawai/composer": "workspace:*",
+        "@dawai/core": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/cli": {
       "name": "@dawai/cli",
       "version": "0.0.0",
@@ -520,6 +531,8 @@
     "fixture-nondeterministic-song": ["fixture-nondeterministic-song@workspace:fixtures/nondeterministic-song"],
 
     "fixture-sound-tour": ["fixture-sound-tour@workspace:fixtures/sound-tour"],
+
+    "fixture-tech-house": ["fixture-tech-house@workspace:fixtures/tech-house"],
 
     "forwarded": ["forwarded@0.2.0", "", {}, "sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow=="],
 

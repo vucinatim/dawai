@@ -1,0 +1,16 @@
+{
+  "name": "fixture-tech-house",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./song": "./song.ts"
+  },
+  "dependencies": {
+    "@dawai/composer": "workspace:*",
+    "@dawai/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
