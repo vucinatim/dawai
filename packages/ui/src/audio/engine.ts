@@ -286,10 +286,7 @@ export class AudioEngine {
     const paramRef = this.resolveParam(lane);
     if (!paramRef) return;
 
-    // Same-beat pairs are jumps: keep the later point as the value.
-    const points = lane.points.filter(
-      (point, index) => lane.points[index + 1]?.beat !== point.beat,
-    );
+    const points = lane.points;
     const first = points[0];
     if (!first) return;
 
@@ -297,6 +294,14 @@ export class AudioEngine {
     if (paramRef.kind === "signal")
       paramRef.signal.value = first.value as never;
     else paramRef.apply(first.value);
+
+    // One event per beat — the last point at a beat wins the jump — but
+    // ramps target the next point in the FULL list: a ramp's endpoint
+    // may share its beat with the next gesture's start (riser end /
+    // sweep start), and dropping it would turn the ramp into a hold.
+    const eventIndexes = points
+      .map((_, index) => index)
+      .filter((index) => points[index + 1]?.beat !== points[index]?.beat);
 
     const part = new Tone.Part(
       (time, event: { index: number }) => {
@@ -307,7 +312,8 @@ export class AudioEngine {
           return;
         }
         const signal = paramRef.signal as unknown as Tone.Signal;
-        signal.cancelScheduledValues(time);
+        // Epsilon spares a ramp that ends exactly at this event's time.
+        signal.cancelScheduledValues(time + 1e-4);
         signal.setValueAtTime(point.value, time);
         if (next && next.curve !== "step") {
           const rampEnd = time + this.beatsToSeconds(next.beat - point.beat);
@@ -318,8 +324,8 @@ export class AudioEngine {
           }
         }
       },
-      points.map((point, index) => ({
-        time: this.beatsToSeconds(point.beat),
+      eventIndexes.map((index) => ({
+        time: this.beatsToSeconds((points[index] as { beat: number }).beat),
         index,
       })),
     ).start(0);
@@ -348,6 +354,7 @@ export class AudioEngine {
     const transport = Tone.getTransport();
     transport.stop();
     transport.seconds = 0;
+    this.releaseAllVoices();
     cancelAnimationFrame(this.playheadFrame);
     this.callbacks.onPlayingChanged(false);
     this.callbacks.onPlayhead(0);
@@ -361,10 +368,18 @@ export class AudioEngine {
   seek(beats: number): void {
     const transport = Tone.getTransport();
     const wasStarted = transport.state === "started";
-    if (wasStarted) transport.pause();
+    if (wasStarted) {
+      transport.pause();
+      this.releaseAllVoices();
+    }
     transport.seconds = this.beatsToSeconds(beats);
     if (wasStarted) transport.start();
     this.callbacks.onPlayhead(beats);
+  }
+
+  /** Sounding notes must not ring past a stop or a mid-play seek. */
+  private releaseAllVoices(): void {
+    for (const graph of this.trackGraphs.values()) graph.voice?.releaseAll();
   }
 
   setLoopRegion(region: { startBeat: number; endBeat: number } | null): void {

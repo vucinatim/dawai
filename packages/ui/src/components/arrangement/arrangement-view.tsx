@@ -19,6 +19,9 @@ import { usePixelsPerBeat, useRuntimeStore } from "@/stores/runtime-store";
  * listener — React's onWheel is passive and can't stop page zoom);
  * follow mode keeps the playhead in view while playing.
  */
+/** Width of the right-stuck header column (tailwind w-44). */
+const HEADERS_WIDTH = 176;
+
 export function ArrangementView() {
   const rows = useArrangementRows();
   const lengthBeats = useSongLengthBeats();
@@ -46,7 +49,7 @@ export function ArrangementView() {
     if (useRuntimeStore.getState().hasUserZoomed) return;
     useRuntimeStore
       .getState()
-      .actions.fitZoom((viewportWidth - 8) / lengthBeats);
+      .actions.fitZoom((viewportWidth - HEADERS_WIDTH - 8) / lengthBeats);
   }, [lengthBeats, viewportWidth]);
 
   // Pinch/ctrl zoom around the cursor; plain scroll while playing
@@ -59,7 +62,9 @@ export function ArrangementView() {
       if (event.ctrlKey || event.metaKey) {
         event.preventDefault();
         const oldPixelsPerBeat = state.pixelsPerBeat;
-        state.actions.zoomBy(event.deltaY < 0 ? 1.12 : 1 / 1.12);
+        // Delta-proportional: pinch events stream many small deltas —
+        // a fixed step per event makes a tiny pinch zoom to the limit.
+        state.actions.zoomBy(Math.exp(-event.deltaY * 0.005));
         const newPixelsPerBeat = useRuntimeStore.getState().pixelsPerBeat;
         const cursorX = event.clientX - container.getBoundingClientRect().left;
         const beatAtCursor =
@@ -80,7 +85,7 @@ export function ArrangementView() {
       const container = scrollRef.current;
       if (!container) return;
       const playheadX = state.playheadBeats * state.pixelsPerBeat;
-      const view = container.clientWidth;
+      const view = container.clientWidth - HEADERS_WIDTH;
       if (
         playheadX < container.scrollLeft ||
         playheadX > container.scrollLeft + view * 0.85
@@ -90,39 +95,65 @@ export function ArrangementView() {
     });
   }, []);
 
+  // Clicks that land on plain lane background (not a clip, header, or
+  // section button, and not the seek slider) clear the selection;
+  // Escape clears it from anywhere. Native listeners like the wheel
+  // handler above — this is scroll-surface behavior, not a control.
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const onClick = (event: MouseEvent) => {
+      const interactive = (event.target as HTMLElement).closest(
+        'button, [role="slider"]',
+      );
+      if (!interactive) useRuntimeStore.getState().actions.clearSelection();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape")
+        useRuntimeStore.getState().actions.clearSelection();
+    };
+    container.addEventListener("click", onClick);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      container.removeEventListener("click", onClick);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
   const contentWidth = Math.max(
-    viewportWidth,
+    viewportWidth - HEADERS_WIDTH,
     Math.ceil(lengthBeats * pixelsPerBeat) + 160,
   );
   const barWidth = beatsPerBar * pixelsPerBeat;
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto">
+    // Single scroll surface for both axes: the ruler sticks to its top,
+    // the header column sticks to its right — CSS sticky only works
+    // against the element that actually scrolls.
+    <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto">
       <div className="flex min-h-full">
-        <div ref={scrollRef} className="min-w-0 flex-1 overflow-x-auto">
-          <div className="relative" style={{ width: contentWidth }}>
-            <TimelineRuler contentWidth={contentWidth} />
-            <div
-              className="relative"
-              style={{
-                backgroundImage: `repeating-linear-gradient(90deg, var(--daw-grid) 0 1px, transparent 1px ${barWidth}px)`,
-              }}
-            >
-              {rows.map((row) =>
-                row.kind === "track" ? (
-                  <TrackLane key={row.track.id} trackId={row.track.id} />
-                ) : (
-                  <BusLane
-                    key={row.kind === "bus" ? `bus:${row.bus.id}` : "master"}
-                    row={row}
-                  />
-                ),
-              )}
-              <Playhead />
-            </div>
+        <div className="relative shrink-0" style={{ width: contentWidth }}>
+          <TimelineRuler contentWidth={contentWidth} />
+          <div
+            className="relative"
+            style={{
+              backgroundImage: `repeating-linear-gradient(90deg, var(--daw-grid) 0 1px, transparent 1px ${barWidth}px)`,
+            }}
+          >
+            {rows.map((row) =>
+              row.kind === "track" ? (
+                <TrackLane key={row.track.id} trackId={row.track.id} />
+              ) : (
+                <BusLane
+                  key={row.kind === "bus" ? `bus:${row.bus.id}` : "master"}
+                  row={row}
+                />
+              ),
+            )}
+            <Playhead />
           </div>
         </div>
-        <aside className="w-44 shrink-0 border-l bg-background">
+        <aside className="sticky right-0 z-20 w-44 shrink-0 border-l bg-background">
           <div className="sticky top-0 z-10 h-7 border-b bg-background" />
           {rows.map((row) =>
             row.kind === "track" ? (

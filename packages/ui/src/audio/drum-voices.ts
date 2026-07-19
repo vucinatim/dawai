@@ -11,12 +11,15 @@ import * as Tone from "tone";
 
 interface DrumVoice {
   trigger: (time: number, velocity: number) => void;
+  release: () => void;
   dispose: () => void;
 }
 
 export interface KitVoices {
   output: Tone.ToneAudioNode;
   triggerPitch: (pitch: number, time: number, velocity: number) => void;
+  /** Cuts every sounding pad now — pause/stop must not ring out. */
+  releaseAll: () => void;
   dispose: () => void;
 }
 
@@ -43,6 +46,7 @@ function noiseVoice(
   return {
     trigger: (time, velocity) =>
       noise.triggerAttackRelease(options.decay, time, velocity),
+    release: () => noise.triggerRelease(),
     dispose: () => {
       noise.dispose();
       filter.dispose();
@@ -81,6 +85,7 @@ function membraneVoice(
         time,
         velocity,
       ),
+    release: () => membrane.triggerRelease(),
     dispose: () => {
       membrane.dispose();
       gain.dispose();
@@ -110,6 +115,7 @@ function metalVoice(
     // note sets the modal stack's root; 250Hz is a typical cymbal strike.
     trigger: (time, velocity) =>
       metal.triggerAttackRelease(250, options.decay, time, velocity),
+    release: () => metal.triggerRelease(),
     dispose: () => {
       metal.dispose();
       gain.dispose();
@@ -122,6 +128,9 @@ function layered(...voices: DrumVoice[]): DrumVoice {
   return {
     trigger: (time, velocity) => {
       for (const voice of voices) voice.trigger(time, velocity);
+    },
+    release: () => {
+      for (const voice of voices) voice.release();
     },
     dispose: () => {
       for (const voice of voices) voice.dispose();
@@ -149,6 +158,7 @@ function kickVoice(output: Tone.ToneAudioNode): DrumVoice {
   const voice = layered(body, click);
   return {
     trigger: voice.trigger,
+    release: voice.release,
     dispose: () => {
       voice.dispose();
       drive.dispose();
@@ -181,6 +191,7 @@ function snareVoice(output: Tone.ToneAudioNode): DrumVoice {
     crack,
     {
       trigger: (time, velocity) => body.trigger(time, velocity * 0.9),
+      release: body.release,
       dispose: body.dispose,
     },
     rattle,
@@ -302,6 +313,9 @@ export function createKitVoices(
       if (last !== undefined && time <= last + 1e-4) return;
       lastTriggerByPitch.set(pitch, time);
       voicesByPitch.get(pitch)?.trigger(time, velocity);
+    },
+    releaseAll: () => {
+      for (const voice of voicesByPitch.values()) voice.release();
     },
     dispose: () => {
       for (const voice of voicesByPitch.values()) voice.dispose();

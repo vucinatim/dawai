@@ -23,6 +23,8 @@ export interface InstrumentVoice {
     velocity: number,
   ) => void;
   applyParam: (param: string, value: number) => void;
+  /** Releases every sounding voice now — pause/stop must not ring out. */
+  releaseAll: () => void;
   dispose: () => void;
 }
 
@@ -34,6 +36,7 @@ interface BuiltLayer {
     velocity: number,
   ) => void;
   set: (values: Record<string, number>) => void;
+  releaseAll: () => void;
   dispose: () => void;
 }
 
@@ -77,6 +80,7 @@ function oscillatorLayer(
       );
     },
     set: (values) => synth.set(values as never),
+    releaseAll: () => synth.releaseAll(),
     dispose: () => {
       synth.dispose();
       gain.dispose();
@@ -113,6 +117,7 @@ function fmLayer(
       );
     },
     set: (values) => synth.set(values as never),
+    releaseAll: () => synth.releaseAll(),
     dispose: () => {
       synth.dispose();
       gain.dispose();
@@ -144,6 +149,7 @@ function noiseLayer(
       noise.triggerAttackRelease(durationSeconds, time, velocity);
     },
     set: () => {},
+    releaseAll: () => noise.triggerRelease(),
     dispose: () => {
       noise.dispose();
       filter.dispose();
@@ -257,6 +263,9 @@ export function createVoiceInstrument(voice: VoiceDefinition): InstrumentVoice {
     },
     applyParam: (param, value) => {
       for (const layer of layers) layer.set({ [param]: value });
+    },
+    releaseAll: () => {
+      for (const layer of layers) layer.releaseAll();
     },
     dispose: () => {
       for (const layer of layers) layer.dispose();

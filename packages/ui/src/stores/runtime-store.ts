@@ -51,7 +51,8 @@ interface RuntimeState {
     selectBus: (busId: string) => void;
     clearSelection: () => void;
     setDetailMode: (mode: DetailMode) => void;
-    toggleSolo: (trackId: string) => void;
+    /** Ableton semantics: exclusive by default, additive with cmd/ctrl. */
+    toggleSolo: (trackId: string, additive?: boolean) => void;
     toggleListenMute: (trackId: string) => void;
     zoomBy: (factor: number) => void;
     fitZoom: (pixelsPerBeat: number) => void;
@@ -99,9 +100,14 @@ export const useRuntimeStore = create<RuntimeState>()((set) => ({
       }),
     clearSelection: () => set({ selection: EMPTY_SELECTION }),
     setDetailMode: (detailMode) => set({ detailMode }),
-    toggleSolo: (trackId) =>
+    toggleSolo: (trackId, additive = false) =>
       set((state) => ({
-        soloedTrackIds: toggled(state.soloedTrackIds, trackId),
+        soloedTrackIds: additive
+          ? toggled(state.soloedTrackIds, trackId)
+          : state.soloedTrackIds.length === 1 &&
+              state.soloedTrackIds[0] === trackId
+            ? []
+            : [trackId],
       })),
     toggleListenMute: (trackId) =>
       set((state) => ({

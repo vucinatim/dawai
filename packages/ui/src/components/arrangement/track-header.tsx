@@ -39,7 +39,8 @@ export function TrackHeader({ trackId }: { trackId: string }) {
         className="absolute inset-0 cursor-default focus-visible:outline-1 focus-visible:outline-ring"
         onClick={() => actions.selectTrack(trackId)}
         onKeyDown={(event) => {
-          if (event.key === "s") actions.toggleSolo(trackId);
+          if (event.key === "s")
+            actions.toggleSolo(trackId, event.metaKey || event.ctrlKey);
           if (event.key === "m") actions.toggleListenMute(trackId);
         }}
       />
@@ -51,9 +52,11 @@ export function TrackHeader({ trackId }: { trackId: string }) {
           <div className="pointer-events-auto flex gap-0.5">
             <MonitorToggle
               label="S"
-              title="Solo (monitoring only)"
+              title="Solo (⌘-click to solo multiple)"
               active={isSoloed}
-              onToggle={() => actions.toggleSolo(trackId)}
+              onToggle={(event) =>
+                actions.toggleSolo(trackId, event.metaKey || event.ctrlKey)
+              }
             />
             <MonitorToggle
               label="M"
@@ -87,7 +90,7 @@ function MonitorToggle({
   label: string;
   title: string;
   active: boolean;
-  onToggle: () => void;
+  onToggle: (event: React.MouseEvent) => void;
 }) {
   return (
     <button
@@ -102,7 +105,7 @@ function MonitorToggle({
       )}
       onClick={(event) => {
         event.stopPropagation();
-        onToggle();
+        onToggle(event);
       }}
     >
       {label}
