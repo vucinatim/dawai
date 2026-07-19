@@ -1,5 +1,6 @@
 import { compile } from "@dawai/composer/compile";
 import demoSong from "fixture-dnb-demo/song";
+import { installNodeBudgetMonitor } from "@/audio/node-budget";
 import { documentActions } from "@/stores/document-store";
 
 /**
@@ -19,6 +20,7 @@ export function feedDemoDocument(): void {
  */
 export function installDevFeed(): void {
   if (!import.meta.env.DEV) return;
+  installNodeBudgetMonitor();
   (window as unknown as Record<string, unknown>).__dawai = {
     feedVariant: (tempo = 140) =>
       documentActions().feedDocument(compile({ ...demoSong, tempo })),
@@ -27,6 +29,8 @@ export function installDevFeed(): void {
       import("@/audio/dev-probe").then((module) => module.audioProbe()),
     audition: () =>
       import("@/audio/dev-probe").then((module) => module.audition()),
+    stress: (seconds = 8) =>
+      import("@/audio/dev-probe").then((module) => module.stressProbe(seconds)),
     tone: () => import("tone"),
     engine: () => import("@/audio/engine").then((module) => module.audioEngine),
   };

@@ -67,9 +67,13 @@ bottleneck to composition/melody craft (see TODO).
   hot swap at the next bar without stopping the transport. Node-budget
   aware: kit tracks build only clip-used pads, lean 9-node chorus,
   layer polyphony capped (a WebAudio graph starves the render thread
-  past a few thousand nodes). Space = play/stop. Dev probes:
+  past a few thousand nodes; a dev node-budget monitor warns when a
+  graph build exceeds ~3k). Space = play/stop. Dev probes:
   `__dawai.feedVariant()` / `.probe()` / `.audition()` (plays every
-  preset + pad, reports peaks and filter-movement drift).
+  preset + pad, reports peaks and filter-movement drift) /
+  `.stress(seconds)` (context-clock rate under playback — must be
+  ≥0.99 over the densest section; the check that catches node-budget
+  collapse).
 - **Fixtures**: `fixtures/dnb-demo` — "Neon Rain" v2, a 136-bar /
   ~3.1 min 8-track DnB arrangement (risers into both drops, impacts,
   OTT bus glue, tuned duck), with golden snapshots (Document + all

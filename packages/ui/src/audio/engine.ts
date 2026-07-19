@@ -5,6 +5,7 @@ import { resolveVoice } from "@dawai/core/voice";
 import * as Tone from "tone";
 import { createKitVoices, type KitVoices } from "./drum-voices";
 import { createFxNode, type FxNode, type ParamRef } from "./fx-nodes";
+import { nodeCreationCount, warnIfGraphOverBudget } from "./node-budget";
 import { createVoiceInstrument, type InstrumentVoice } from "./voice-builder";
 
 /**
@@ -93,6 +94,7 @@ export class AudioEngine {
   private rebuild(document: Document): void {
     this.teardown();
     this.document = document;
+    const nodesBefore = nodeCreationCount();
 
     const transport = Tone.getTransport();
     transport.bpm.value = document.tempo;
@@ -133,6 +135,7 @@ export class AudioEngine {
     }
 
     this.applyMonitoring(this.monitoring.soloed, this.monitoring.listenMuted);
+    warnIfGraphOverBudget(nodeCreationCount() - nodesBefore);
   }
 
   private buildTrack(track: Track): void {

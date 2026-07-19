@@ -28,6 +28,32 @@ export async function audioProbe(): Promise<{
   };
 }
 
+/**
+ * Realtime stress check: measures the audio-context clock against wall
+ * time while the transport plays. Run over the densest section of a
+ * song — a rate below ~0.99 means the graph misses render deadlines
+ * (glitchy or silent playback). This is the assertion that catches
+ * node-budget collapse; the audition can't (it plays one sound at a
+ * time, far below full-arrangement load).
+ */
+export async function stressProbe(seconds = 8): Promise<{
+  rate: number;
+  realtime: boolean;
+  transportState: string;
+}> {
+  const raw = Tone.getContext().rawContext;
+  const wallStart = performance.now();
+  const audioStart = raw.currentTime;
+  await new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+  const rate =
+    (raw.currentTime - audioStart) / ((performance.now() - wallStart) / 1000);
+  return {
+    rate: Math.round(rate * 1000) / 1000,
+    realtime: rate >= 0.99,
+    transportState: Tone.getTransport().state,
+  };
+}
+
 interface AuditionEntry {
   id: string;
   peak: number;
