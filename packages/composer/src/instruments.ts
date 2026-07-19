@@ -1,6 +1,7 @@
 import type { Instrument } from "@dawai/core/document";
 import { KITS, type KitId, kitPad } from "@dawai/core/kits";
 import type { SynthPresetId } from "@dawai/core/presets";
+import { type VoiceDefinition, voiceDefinitionSchema } from "@dawai/core/voice";
 import { type StepsOptions, steps } from "./builders.ts";
 import { stack } from "./combinators.ts";
 import type { Pattern } from "./pattern.ts";
@@ -31,6 +32,11 @@ export function sampler(kitReference: Kit | KitId): Instrument {
   const id =
     typeof kitReference === "string" ? kit(kitReference).id : kitReference.id;
   return { kind: "sampler", kit: id };
+}
+
+/** A fully custom synth voice (schema v2), validated at author time. */
+export function customVoice(voice: VoiceDefinition): Instrument {
+  return { kind: "voice", voice: voiceDefinitionSchema.parse(voice) };
 }
 
 /** An audio file as an instrument; a note at pitch C4 plays it at its original rate. */

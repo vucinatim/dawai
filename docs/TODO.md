@@ -33,11 +33,12 @@ smaller and the queue itself. (Substrate goals 1–3: done.)
 
 ## Sound quality (strategy + order in docs/sound-design.md)
 
-1. [ ] **L1 synthesis + mixing sprint**: moving filter envelopes,
+1. [x] **L1 synthesis + mixing sprint**: moving filter envelopes,
        layered custom voices, reese/supersaw recipes, upgraded drum
        voices, OTT-style multiband bus glue, transition idioms
        (`riser`/`sweep`/`impact`, richer fills), duck tuning;
-       re-author Neon Rain as the benchmark.
+       re-author Neon Rain as the benchmark. (Goal 4 — objective pass
+       done; human listening rounds pending.)
 2. [ ] **Sample playback + curated CC0 starter library** (hybrid
        thesis: drums/FX from samples, tonal layer from synthesis);
        sound browser as the human swap surface; later
@@ -71,12 +72,12 @@ smaller and the queue itself. (Substrate goals 1–3: done.)
    combinators, generators, and toolkits are plain TS modules any song
    can import, e.g. a published `dawai-liquid-toolkit`)
 
-- [ ] During the L1 sprint: renderer instrument/fx construction becomes
+- [x] During the L1 sprint: renderer instrument/fx construction becomes
       registry-driven internally (table, not switch) — the future
       plugin registry is then just external entries.
-- [ ] Song-level custom presets/kits as validated data (inline preset
+- [x] Song-level custom presets/kits as validated data (inline preset
       definitions in the IR, not just built-in ids) — 80% of "custom
-      synths" for solo users.
+      synths" for solo users. (`customVoice()`; kits still built-in.)
 - [ ] Full plugin layer when dawai-as-dependency demands it: plugin =
       module exporting a descriptor (id + zod params schema → IR
       `{ type: "plugin", pluginId, params }` variant) + a renderer

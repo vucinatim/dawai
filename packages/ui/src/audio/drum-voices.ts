@@ -106,8 +106,10 @@ function metalVoice(
     octaves: 1.2,
   }).connect(gain);
   return {
+    // MetalSynth is pitched: (note, duration, time, velocity). The strike
+    // note sets the modal stack's root; 250Hz is a typical cymbal strike.
     trigger: (time, velocity) =>
-      metal.triggerAttackRelease(options.decay, time, velocity),
+      metal.triggerAttackRelease(250, options.decay, time, velocity),
     dispose: () => {
       metal.dispose();
       gain.dispose();
@@ -115,7 +117,46 @@ function metalVoice(
   };
 }
 
-/** Snare = noise crack + tonal body, blended. */
+/** Composes several voices into one pad trigger. */
+function layered(...voices: DrumVoice[]): DrumVoice {
+  return {
+    trigger: (time, velocity) => {
+      for (const voice of voices) voice.trigger(time, velocity);
+    },
+    dispose: () => {
+      for (const voice of voices) voice.dispose();
+    },
+  };
+}
+
+/** Kick v2: pitch-envelope body + click transient + saturation. */
+function kickVoice(output: Tone.ToneAudioNode): DrumVoice {
+  const drive = new Tone.Distortion({ distortion: 0.35, wet: 0.6 }).connect(
+    output,
+  );
+  const body = membraneVoice(drive, {
+    note: "A0",
+    decay: 0.34,
+    octaves: 7,
+    pitchDecay: 0.05,
+  });
+  const click = noiseVoice(drive, {
+    decay: 0.015,
+    filterType: "highpass",
+    frequency: 3800,
+    gainDb: -6,
+  });
+  const voice = layered(body, click);
+  return {
+    trigger: voice.trigger,
+    dispose: () => {
+      voice.dispose();
+      drive.dispose();
+    },
+  };
+}
+
+/** Snare v2: crack + tonal body + high rattle tail. */
 function snareVoice(output: Tone.ToneAudioNode): DrumVoice {
   const crack = noiseVoice(output, {
     decay: 0.16,
@@ -130,21 +171,42 @@ function snareVoice(output: Tone.ToneAudioNode): DrumVoice {
     octaves: 2,
     gainDb: -8,
   });
-  return {
-    trigger: (time, velocity) => {
-      crack.trigger(time, velocity);
-      body.trigger(time, velocity * 0.9);
+  const rattle = noiseVoice(output, {
+    decay: 0.3,
+    filterType: "highpass",
+    frequency: 5000,
+    gainDb: -14,
+  });
+  return layered(
+    crack,
+    {
+      trigger: (time, velocity) => body.trigger(time, velocity * 0.9),
+      dispose: body.dispose,
     },
-    dispose: () => {
-      crack.dispose();
-      body.dispose();
-    },
-  };
+    rattle,
+  );
+}
+
+/** Impact: cinematic downbeat boom — long sub drop + dark noise wash. */
+function impactVoice(output: Tone.ToneAudioNode): DrumVoice {
+  const boom = membraneVoice(output, {
+    note: "A0",
+    decay: 1.3,
+    octaves: 8,
+    pitchDecay: 0.22,
+  });
+  const wash = noiseVoice(output, {
+    decay: 1.6,
+    filterType: "lowpass",
+    frequency: 500,
+    gainDb: -8,
+  });
+  return layered(boom, wash);
 }
 
 const PAD_RECIPES: Record<string, (output: Tone.ToneAudioNode) => DrumVoice> = {
-  kick: (output) =>
-    membraneVoice(output, { note: "A0", decay: 0.32, octaves: 7 }),
+  impact: impactVoice,
+  kick: kickVoice,
   rim: (output) =>
     noiseVoice(output, {
       decay: 0.03,
@@ -183,9 +245,9 @@ const PAD_RECIPES: Record<string, (output: Tone.ToneAudioNode) => DrumVoice> = {
       gainDb: -8,
     }),
   crash: (output) =>
-    metalVoice(output, { decay: 1.6, frequency: 4000, gainDb: -8 }),
+    metalVoice(output, { decay: 1.6, frequency: 4000, gainDb: -20 }),
   ride: (output) =>
-    metalVoice(output, { decay: 0.9, frequency: 5200, gainDb: -12 }),
+    metalVoice(output, { decay: 0.9, frequency: 5200, gainDb: -18 }),
   perc1: (output) =>
     membraneVoice(output, {
       note: "E3",
@@ -212,11 +274,21 @@ const PAD_RECIPES: Record<string, (output: Tone.ToneAudioNode) => DrumVoice> = {
     }),
 };
 
-export function createKitVoices(kitId: KitId): KitVoices {
+/**
+ * Builds the kit's pad voices. Pass `usedPitches` (known at build time
+ * from the track's clips) to instantiate only the pads a track plays —
+ * a full kit is ~20 synths and eager-building every pad on every kit
+ * track blows the WebAudio node budget and starves the render thread.
+ */
+export function createKitVoices(
+  kitId: KitId,
+  usedPitches?: ReadonlySet<number>,
+): KitVoices {
   const output = new Tone.Gain(1);
   const voicesByPitch = new Map<number, DrumVoice>();
   const lastTriggerByPitch = new Map<number, number>();
   for (const [padName, pad] of Object.entries(KITS[kitId])) {
+    if (usedPitches && !usedPitches.has(pad.pitch)) continue;
     const recipe = PAD_RECIPES[padName];
     if (recipe) voicesByPitch.set(pad.pitch, recipe(output));
   }

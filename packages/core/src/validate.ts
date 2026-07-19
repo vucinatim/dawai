@@ -2,6 +2,7 @@ import type { ZodError } from "zod";
 import type { Document, Fx, Track } from "./document.ts";
 import { documentSchema } from "./document.ts";
 import { midiToNoteName } from "./notes.ts";
+import { VOICE_PARAM_PATHS } from "./voice.ts";
 
 /**
  * Full Document validation: schema shape (zod) plus the cross-cutting
@@ -43,6 +44,7 @@ export function validateDocument(input: unknown): Document {
     ...sectionIssues(document),
     ...automationIssues(document),
     ...masterIssues(document),
+    ...voiceParamIssues(document),
   ];
   if (issues.length > 0) throw new DocumentValidationError(issues);
   return document;
@@ -298,6 +300,22 @@ function pathIssues(
       message: `Invalid automation path "${path}". Expected "gain", "pan", "duck", "fx.<index>.<param>", or "instrument.<param>".`,
     },
   ];
+}
+
+function voiceParamIssues(document: Document): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  for (const track of document.tracks) {
+    if (track.instrument.kind !== "synth") continue;
+    for (const path of Object.keys(track.instrument.params)) {
+      if (!VOICE_PARAM_PATHS.has(path)) {
+        issues.push({
+          path: `tracks.${track.id}.instrument.params`,
+          message: `Unknown voice param "${path}". Overridable: ${[...VOICE_PARAM_PATHS].join(", ")}.`,
+        });
+      }
+    }
+  }
+  return issues;
 }
 
 function masterIssues(document: Document): ValidationIssue[] {

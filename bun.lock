@@ -51,6 +51,17 @@
         "typescript": "^5.9.3",
       },
     },
+    "fixtures/sound-tour": {
+      "name": "fixture-sound-tour",
+      "version": "0.0.0",
+      "dependencies": {
+        "@dawai/composer": "workspace:*",
+        "@dawai/core": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/cli": {
       "name": "@dawai/cli",
       "version": "0.0.0",
@@ -507,6 +518,8 @@
     "fixture-minimal-song": ["fixture-minimal-song@workspace:fixtures/minimal-song"],
 
     "fixture-nondeterministic-song": ["fixture-nondeterministic-song@workspace:fixtures/nondeterministic-song"],
+
+    "fixture-sound-tour": ["fixture-sound-tour@workspace:fixtures/sound-tour"],
 
     "forwarded": ["forwarded@0.2.0", "", {}, "sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow=="],
 

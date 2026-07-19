@@ -1,7 +1,11 @@
+import type { VoiceDefinition } from "./voice.ts";
+
 /**
- * Built-in synth presets. The IR stores only a preset id plus numeric
- * param overrides; these definitions are the renderer-agnostic defaults
- * a renderer (e.g. the Tone.js renderer in @dawai/ui) interprets.
+ * Built-in synth presets — voice schema v2 (see voice.ts). Layered
+ * stacks with real filter movement; the renderer interprets them.
+ * Recipes follow standard electronic sound-design craft: reese beating
+ * from detuned saw pairs, plucks carved by filter envelopes, pads that
+ * bloom, FM keys/bells.
  */
 
 export const SYNTH_PRESET_IDS = [
@@ -13,70 +17,394 @@ export const SYNTH_PRESET_IDS = [
   "pluck",
   "keys",
   "bell",
+  "hoover",
+  "stab",
+  "riser-noise",
+  "arp-saw",
 ] as const;
 
 export type SynthPresetId = (typeof SYNTH_PRESET_IDS)[number];
 
-export interface SynthPresetDefinition {
-  oscillator: {
-    type: "sine" | "triangle" | "sawtooth" | "square";
-    /** Number of unison voices (1 = single voice). */
-    voices: number;
-    /** Unison detune spread in cents (0 when voices is 1). */
-    spread: number;
-  };
-  envelope: {
-    attack: number;
-    decay: number;
-    sustain: number;
-    release: number;
-  };
-  filter: {
-    mode: "lowpass" | "highpass";
-    cutoff: number;
-    q: number;
-  };
-}
-
-export const SYNTH_PRESETS: Record<SynthPresetId, SynthPresetDefinition> = {
+export const SYNTH_PRESETS: Record<SynthPresetId, VoiceDefinition> = {
   "sub-sine": {
-    oscillator: { type: "sine", voices: 1, spread: 0 },
-    envelope: { attack: 0.005, decay: 0.1, sustain: 1, release: 0.08 },
-    filter: { mode: "lowpass", cutoff: 300, q: 0.7 },
+    layers: [
+      {
+        kind: "osc",
+        type: "sine",
+        voices: 1,
+        spread: 0,
+        detune: 0,
+        octave: 0,
+        gain: 0,
+      },
+      {
+        kind: "osc",
+        type: "triangle",
+        voices: 1,
+        spread: 0,
+        detune: 0,
+        octave: 0,
+        gain: -12,
+      },
+    ],
+    amp: { attack: 0.004, decay: 0.08, sustain: 1, release: 0.09 },
+    filter: { mode: "lowpass", cutoff: 350, q: 0.7 },
+    filterEnvelope: {
+      attack: 0.01,
+      decay: 0.1,
+      sustain: 1,
+      release: 0.1,
+      octaves: 0,
+    },
+    drive: 0.15,
+    chorus: 0,
   },
   reese: {
-    oscillator: { type: "sawtooth", voices: 2, spread: 35 },
-    envelope: { attack: 0.01, decay: 0.2, sustain: 0.9, release: 0.12 },
-    filter: { mode: "lowpass", cutoff: 900, q: 1.2 },
+    layers: [
+      {
+        kind: "osc",
+        type: "sawtooth",
+        voices: 1,
+        spread: 0,
+        detune: -18,
+        octave: 0,
+        gain: 0,
+      },
+      {
+        kind: "osc",
+        type: "sawtooth",
+        voices: 1,
+        spread: 0,
+        detune: 18,
+        octave: 0,
+        gain: 0,
+      },
+      {
+        kind: "osc",
+        type: "sawtooth",
+        voices: 1,
+        spread: 0,
+        detune: 0,
+        octave: -1,
+        gain: -7,
+      },
+    ],
+    amp: { attack: 0.008, decay: 0.2, sustain: 0.9, release: 0.15 },
+    filter: { mode: "lowpass", cutoff: 700, q: 1.1 },
+    filterEnvelope: {
+      attack: 0.02,
+      decay: 0.6,
+      sustain: 0.35,
+      release: 0.3,
+      octaves: 2.2,
+    },
+    drive: 0.35,
+    chorus: 0.4,
   },
   "fat-saw": {
-    oscillator: { type: "sawtooth", voices: 3, spread: 20 },
-    envelope: { attack: 0.005, decay: 0.15, sustain: 0.8, release: 0.1 },
-    filter: { mode: "lowpass", cutoff: 4000, q: 0.9 },
+    layers: [
+      {
+        kind: "osc",
+        type: "sawtooth",
+        voices: 3,
+        spread: 24,
+        detune: 0,
+        octave: 0,
+        gain: 0,
+      },
+      {
+        kind: "osc",
+        type: "square",
+        voices: 1,
+        spread: 0,
+        detune: 0,
+        octave: 0,
+        gain: -10,
+      },
+    ],
+    amp: { attack: 0.005, decay: 0.15, sustain: 0.8, release: 0.12 },
+    filter: { mode: "lowpass", cutoff: 3500, q: 0.8 },
+    filterEnvelope: {
+      attack: 0.005,
+      decay: 0.25,
+      sustain: 0.5,
+      release: 0.2,
+      octaves: 1.5,
+    },
+    drive: 0.15,
+    chorus: 0.2,
   },
   supersaw: {
-    oscillator: { type: "sawtooth", voices: 7, spread: 50 },
-    envelope: { attack: 0.01, decay: 0.3, sustain: 0.7, release: 0.4 },
-    filter: { mode: "lowpass", cutoff: 8000, q: 0.8 },
+    layers: [
+      {
+        kind: "osc",
+        type: "sawtooth",
+        voices: 7,
+        spread: 55,
+        detune: 0,
+        octave: 0,
+        gain: 0,
+      },
+      {
+        kind: "osc",
+        type: "sawtooth",
+        voices: 3,
+        spread: 30,
+        detune: 0,
+        octave: 1,
+        gain: -8,
+      },
+    ],
+    amp: { attack: 0.01, decay: 0.3, sustain: 0.75, release: 0.5 },
+    filter: { mode: "lowpass", cutoff: 6000, q: 0.7 },
+    filterEnvelope: {
+      attack: 0.01,
+      decay: 0.4,
+      sustain: 0.6,
+      release: 0.4,
+      octaves: 1.2,
+    },
+    drive: 0.1,
+    chorus: 0.35,
   },
   "warm-pad": {
-    oscillator: { type: "sawtooth", voices: 4, spread: 25 },
-    envelope: { attack: 0.8, decay: 0.5, sustain: 0.8, release: 1.5 },
-    filter: { mode: "lowpass", cutoff: 1800, q: 0.6 },
+    layers: [
+      {
+        kind: "osc",
+        type: "sawtooth",
+        voices: 4,
+        spread: 28,
+        detune: 0,
+        octave: 0,
+        gain: -2,
+      },
+      {
+        kind: "osc",
+        type: "triangle",
+        voices: 1,
+        spread: 0,
+        detune: 0,
+        octave: 1,
+        gain: -8,
+      },
+      { kind: "noise", type: "pink", gain: -30 },
+    ],
+    amp: { attack: 1.2, decay: 0.8, sustain: 0.8, release: 2.2 },
+    filter: { mode: "lowpass", cutoff: 1200, q: 0.5 },
+    filterEnvelope: {
+      attack: 2.5,
+      decay: 1,
+      sustain: 0.6,
+      release: 2,
+      octaves: 1.8,
+    },
+    drive: 0,
+    chorus: 0.5,
   },
   pluck: {
-    oscillator: { type: "triangle", voices: 1, spread: 0 },
-    envelope: { attack: 0.002, decay: 0.25, sustain: 0, release: 0.2 },
-    filter: { mode: "lowpass", cutoff: 5000, q: 1 },
+    layers: [
+      {
+        kind: "osc",
+        type: "triangle",
+        voices: 1,
+        spread: 0,
+        detune: 0,
+        octave: 0,
+        gain: 0,
+      },
+      {
+        kind: "osc",
+        type: "square",
+        voices: 1,
+        spread: 0,
+        detune: 0,
+        octave: 0,
+        gain: -6,
+      },
+    ],
+    amp: { attack: 0.002, decay: 0.28, sustain: 0, release: 0.25 },
+    filter: { mode: "lowpass", cutoff: 900, q: 1.2 },
+    filterEnvelope: {
+      attack: 0.002,
+      decay: 0.18,
+      sustain: 0,
+      release: 0.2,
+      octaves: 3.5,
+    },
+    drive: 0.1,
+    chorus: 0.15,
   },
   keys: {
-    oscillator: { type: "triangle", voices: 2, spread: 8 },
-    envelope: { attack: 0.005, decay: 0.4, sustain: 0.4, release: 0.5 },
-    filter: { mode: "lowpass", cutoff: 6000, q: 0.7 },
+    layers: [
+      { kind: "fm", harmonicity: 2, modulationIndex: 4, octave: 0, gain: 0 },
+      {
+        kind: "osc",
+        type: "sine",
+        voices: 1,
+        spread: 0,
+        detune: 0,
+        octave: 0,
+        gain: -8,
+      },
+    ],
+    amp: { attack: 0.004, decay: 0.5, sustain: 0.35, release: 0.6 },
+    filter: { mode: "lowpass", cutoff: 5000, q: 0.6 },
+    filterEnvelope: {
+      attack: 0.004,
+      decay: 0.4,
+      sustain: 0.3,
+      release: 0.5,
+      octaves: 0.8,
+    },
+    drive: 0.08,
+    chorus: 0.25,
   },
   bell: {
-    oscillator: { type: "sine", voices: 2, spread: 12 },
-    envelope: { attack: 0.002, decay: 1.2, sustain: 0, release: 1.4 },
-    filter: { mode: "highpass", cutoff: 400, q: 0.7 },
+    layers: [
+      { kind: "fm", harmonicity: 3.5, modulationIndex: 12, octave: 0, gain: 0 },
+      {
+        kind: "fm",
+        harmonicity: 7.1,
+        modulationIndex: 6,
+        octave: 1,
+        gain: -10,
+      },
+    ],
+    amp: { attack: 0.002, decay: 1.4, sustain: 0, release: 1.6 },
+    filter: { mode: "highpass", cutoff: 300, q: 0.6 },
+    filterEnvelope: {
+      attack: 0.01,
+      decay: 0.1,
+      sustain: 1,
+      release: 0.1,
+      octaves: 0,
+    },
+    drive: 0,
+    chorus: 0.2,
+  },
+  hoover: {
+    layers: [
+      {
+        kind: "osc",
+        type: "sawtooth",
+        voices: 5,
+        spread: 60,
+        detune: 0,
+        octave: 0,
+        gain: 0,
+      },
+      {
+        kind: "osc",
+        type: "square",
+        voices: 1,
+        spread: 0,
+        detune: 0,
+        octave: -1,
+        gain: -6,
+      },
+      { kind: "noise", type: "white", gain: -24 },
+    ],
+    amp: { attack: 0.03, decay: 0.3, sustain: 0.85, release: 0.3 },
+    filter: { mode: "lowpass", cutoff: 1800, q: 2 },
+    filterEnvelope: {
+      attack: 0.25,
+      decay: 0.5,
+      sustain: 0.55,
+      release: 0.3,
+      octaves: 2.5,
+    },
+    drive: 0.3,
+    chorus: 0.5,
+  },
+  stab: {
+    layers: [
+      {
+        kind: "osc",
+        type: "sawtooth",
+        voices: 2,
+        spread: 12,
+        detune: 0,
+        octave: 0,
+        gain: 0,
+      },
+      {
+        kind: "osc",
+        type: "square",
+        voices: 1,
+        spread: 0,
+        detune: 0,
+        octave: -1,
+        gain: -5,
+      },
+    ],
+    amp: { attack: 0.003, decay: 0.22, sustain: 0, release: 0.18 },
+    filter: { mode: "lowpass", cutoff: 1400, q: 3 },
+    filterEnvelope: {
+      attack: 0.003,
+      decay: 0.16,
+      sustain: 0,
+      release: 0.15,
+      octaves: 2.8,
+    },
+    drive: 0.25,
+    chorus: 0.1,
+  },
+  "riser-noise": {
+    layers: [
+      { kind: "noise", type: "white", gain: 0 },
+      {
+        kind: "osc",
+        type: "sawtooth",
+        voices: 3,
+        spread: 40,
+        detune: 0,
+        octave: 1,
+        gain: -14,
+      },
+    ],
+    amp: { attack: 0.5, decay: 0.1, sustain: 1, release: 1.5 },
+    filter: { mode: "bandpass", cutoff: 500, q: 1.4 },
+    filterEnvelope: {
+      attack: 0.01,
+      decay: 0.1,
+      sustain: 1,
+      release: 0.5,
+      octaves: 0,
+    },
+    drive: 0,
+    chorus: 0.3,
+  },
+  "arp-saw": {
+    layers: [
+      {
+        kind: "osc",
+        type: "sawtooth",
+        voices: 2,
+        spread: 10,
+        detune: 0,
+        octave: 0,
+        gain: 0,
+      },
+      {
+        kind: "osc",
+        type: "square",
+        voices: 1,
+        spread: 0,
+        detune: 0,
+        octave: 1,
+        gain: -9,
+      },
+    ],
+    amp: { attack: 0.002, decay: 0.16, sustain: 0.15, release: 0.12 },
+    filter: { mode: "lowpass", cutoff: 2400, q: 1.6 },
+    filterEnvelope: {
+      attack: 0.002,
+      decay: 0.12,
+      sustain: 0.1,
+      release: 0.1,
+      octaves: 2.4,
+    },
+    drive: 0.12,
+    chorus: 0.18,
   },
 };

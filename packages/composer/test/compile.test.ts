@@ -202,6 +202,41 @@ describe("compile", () => {
   });
 });
 
+describe("part-level automation (self targets)", () => {
+  test("riser() resolves self targets to its own track", async () => {
+    const { riser } = await import("@dawai/composer/idioms");
+    const spec = song({
+      name: "Rise",
+      tempo: 174,
+      tracks: [
+        track("fx", synth("riser-noise"), {
+          fx: [filter("bandpass", 500, 1.5)],
+        }),
+      ],
+      arrangement: [section("build", 2, { fx: riser(8) })],
+    });
+    const document = compile(spec);
+    const cutoffLane = document.automation.find(
+      (lane) => lane.target.path === "fx.0.cutoff",
+    );
+    expect(cutoffLane?.target.owner).toEqual({ type: "track", id: "fx" });
+    expect(cutoffLane?.points.map((point) => point.value)).toEqual([
+      300, 12000,
+    ]);
+    const gainLane = document.automation.find(
+      (lane) => lane.target.path === "gain",
+    );
+    expect(gainLane?.target.owner).toEqual({ type: "track", id: "fx" });
+  });
+
+  test("impact() hits the kit's impact pad", async () => {
+    const { impact } = await import("@dawai/composer/idioms");
+    const pattern = impact(kit("dnb-standard"));
+    expect(pattern.events[0]?.pitch).toBe(24);
+    expect(pattern.events[0]?.velocity).toBe(127);
+  });
+});
+
 describe("duck compilation", () => {
   test("compiles a known kick pattern to the exact duck curve", () => {
     const spec = song({

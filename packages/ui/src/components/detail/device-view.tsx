@@ -1,6 +1,7 @@
 import type { Fx, Instrument, Track } from "@dawai/core/document";
 import { KITS } from "@dawai/core/kits";
 import { SYNTH_PRESETS } from "@dawai/core/presets";
+import type { VoiceDefinition } from "@dawai/core/voice";
 import { ArrowRightIcon } from "lucide-react";
 import { DeviceModule } from "@/components/detail/device-module";
 import { Button } from "@/components/ui/button";
@@ -114,23 +115,49 @@ function FxChain({ title, fx }: { title: string; fx: Fx[] }) {
   );
 }
 
+function voiceParams(
+  voice: VoiceDefinition,
+  overrides: Record<string, number>,
+): [string, string][] {
+  const layers = voice.layers
+    .map((layer) =>
+      layer.kind === "osc"
+        ? `${layer.type}${layer.voices > 1 ? `×${layer.voices}` : ""}`
+        : layer.kind,
+    )
+    .join(" + ");
+  return [
+    ["layers", layers],
+    ["filter", `${voice.filter.mode} ${voice.filter.cutoff}Hz`],
+    ["f-env", `${voice.filterEnvelope.octaves} oct`],
+    ["amp", `${voice.amp.attack}s/${voice.amp.release}s`],
+    ["drive", String(voice.drive)],
+    ["chorus", String(voice.chorus)],
+    ...Object.entries(overrides).map(
+      ([key, value]) => [key, String(value)] as [string, string],
+    ),
+  ];
+}
+
 function InstrumentModule({ instrument }: { instrument: Instrument }) {
   if (instrument.kind === "synth") {
-    const preset = SYNTH_PRESETS[instrument.preset];
     return (
       <DeviceModule
         title="synth"
         subtitle={instrument.preset}
-        params={[
-          ["osc", preset.oscillator.type],
-          ["voices", String(preset.oscillator.voices)],
-          ["attack", `${preset.envelope.attack}s`],
-          ["release", `${preset.envelope.release}s`],
-          ["filter", `${preset.filter.mode} ${preset.filter.cutoff}Hz`],
-          ...Object.entries(instrument.params).map(
-            ([key, value]) => [key, String(value)] as [string, string],
-          ),
-        ]}
+        params={voiceParams(
+          SYNTH_PRESETS[instrument.preset],
+          instrument.params,
+        )}
+      />
+    );
+  }
+  if (instrument.kind === "voice") {
+    return (
+      <DeviceModule
+        title="synth"
+        subtitle="custom voice"
+        params={voiceParams(instrument.voice, {})}
       />
     );
   }

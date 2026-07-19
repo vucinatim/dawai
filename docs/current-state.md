@@ -1,26 +1,31 @@
 # Current state
 
-**ALL THREE SUBSTRATE GOALS COMPLETE** (Compiler, Renderer, Loop) —
-gates green (107 tests, tsc, biome), each with a validation record in
+**SUBSTRATE GOALS 1–3 COMPLETE + GOAL 4 (L1 SOUND) BUILT** — gates
+green (114 tests, tsc, biome), each goal with a validation record in
 its spec under `docs/goals/`. The product works end to end: edit
 `song.ts` while the song plays and the preview hot-swaps at the next
-bar without stopping. Feature work (sound quality, Tier 2) is next.
+bar without stopping. Goal 4's objective validation passed (audition
+probe: nothing silent, no clipping, filter movement measured); the
+human listening rounds are the remaining gate.
 
 ## What exists and works
 
 - **Monorepo**: bun workspaces (`packages/*`, `fixtures/*`), strict
   TypeScript (single root `tsc --noEmit`), Biome, `bun test`. All three
-  gates green: 107 tests, 0 type errors, 0 lint errors. Purity
+  gates green: 114 tests, 0 type errors, 0 lint errors. Purity
   boundaries enforced by test (`boundaries.test.ts`); the determinism
   guard (`composer/determinism.ts`) fails `check` on Math.random/
   Date.now/performance.now in song source.
 - **`@dawai/core`** — the IR: complete zod Document schema (tracks,
-  clips, note tuples, synth/sampler/sample instruments, 8 fx types,
-  buses, master, automation lanes, section markers),
+  clips, note tuples, synth/sampler/sample/inline-voice instruments,
+  9 fx types incl. `ott`, buses, master, automation lanes, section
+  markers), **voice schema v2** (`voice.ts`: layered osc/fm/noise
+  voices, amp + filter envelopes with octaves of movement, drive/
+  chorus color; dotted-path param overrides via `resolveVoice`),
   `validateDocument()` with cross-cutting invariants and
   fix-naming error messages, note-name/MIDI + bars/beats utilities,
   density/stats analysis, and the four inspect text views
-  (arrangement grid, track detail, mix, stats). Synth presets and
+  (arrangement grid, track detail, mix, stats). 12 synth presets and
   sampler kits ship as data (`presets.ts`, `kits.ts`).
 - **`@dawai/composer`** — the authoring API: `song`/`track`/`section`
   (+ `.with`/`.bars`), builders (`notes`, `steps`, `chords`, `melody`,
@@ -52,20 +57,28 @@ bar without stopping. Feature work (sound quality, Tier 2) is next.
   view: canvas piano roll). State: two zustand stores (document,
   runtime) with reducer actions + narrow selector hooks;
   `feedDocument` is the single Document write path (goal-3 WS seam).
-  Audio: Tone.js engine (`src/audio/`) — synth presets via
-  PolySynth(MonoSynth), **synthesized drum voices** for kit pads, fx
-  chains, buses, master limiter, automation lanes incl. duck, seek via
-  pause/reposition/resume, hot swap at the next bar without stopping
-  the transport. Space = play/stop. Dev probes: `__dawai.feedVariant()`
-  / `__dawai.probe()` (destination peak meter).
-- **Fixtures**: `fixtures/dnb-demo` — "Neon Rain", a 136-bar / ~3.1 min
-  DnB arrangement exercising the full surface, with golden snapshots
-  (Document + all four views), an in-memory determinism test, and a
-  cross-execution determinism test (two fresh CLI runs byte-identical).
-  The breaks track is a synthesized layer (no sample playback in v0).
-  Edge fixtures: `invalid-song` (validate-stage failure),
-  `minimal-song` (empty timeline), `nondeterministic-song`
-  (determinism-guard failure).
+  Audio: Tone.js engine (`src/audio/`) — **registry-driven** voice +
+  fx construction (`voice-builder.ts`, `FX_FACTORIES`), layered
+  voices with real filter envelopes, **drum voices v2** (layered
+  kick/snare/impact recipes), OTT via MultibandCompressor, fx chains,
+  buses, master limiter, automation lanes incl. duck and `self.*`
+  part automation (risers/sweeps), seek via pause/reposition/resume,
+  hot swap at the next bar without stopping the transport. Node-budget
+  aware: kit tracks build only clip-used pads, lean 9-node chorus,
+  layer polyphony capped (a WebAudio graph starves the render thread
+  past a few thousand nodes). Space = play/stop. Dev probes:
+  `__dawai.feedVariant()` / `.probe()` / `.audition()` (plays every
+  preset + pad, reports peaks and filter-movement drift).
+- **Fixtures**: `fixtures/dnb-demo` — "Neon Rain" v2, a 136-bar /
+  ~3.1 min 8-track DnB arrangement (risers into both drops, impacts,
+  OTT bus glue, tuned duck), with golden snapshots (Document + all
+  four views), an in-memory determinism test, and a cross-execution
+  determinism test (two fresh CLI runs byte-identical). The breaks
+  track is a synthesized layer (no sample playback in v0).
+  `fixtures/sound-tour` — walks all 12 presets and all 13 kit pads in
+  labeled sections (the listening checklist). Edge fixtures:
+  `invalid-song` (validate-stage failure), `minimal-song` (empty
+  timeline), `nondeterministic-song` (determinism-guard failure).
 
 ## Conventions locked in goal 1
 
@@ -78,7 +91,9 @@ bar without stopping. Feature work (sound quality, Tier 2) is next.
 
 ## Next
 
-Substrates are done. Feature work on top, roughly in order of audible
-payoff (see composer-design.md Tier 2): deeper synthesis recipes and
-presets, transition craft (risers, sweeps, fills, crashes), sample
-playback + a small CC0 library, duck tuning, `dawai analyze`.
+Goal 4's human listening rounds (sound-tour + Neon Rain v2, per-sound
+keep/fix verdicts, iterate via hot reload). Then, in order of audible
+payoff (see docs/sound-design.md delivery order): sample playback + a
+CC0 starter library + sound browser (goal 5), `dawai render` + numeric
+ears (goal 6), resampling primitive, automation-lane UI, E1
+editability.

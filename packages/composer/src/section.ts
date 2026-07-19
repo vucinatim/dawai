@@ -5,17 +5,36 @@ import type { Pattern } from "./pattern.ts";
  * Sections are the primary authoring surface: a named span declaring
  * what each track plays. Patterns shorter than the section tile (loop)
  * to fill it; the arrangement is a plain array of sections.
+ *
+ * A part is a Pattern, or `{ pattern, automation }` whose automation
+ * may target `self.…` — resolved to the part's own track at compile.
+ * That makes idioms like riser()/sweep() self-contained one-liners.
  */
+
+export interface PartWithAutomation {
+  pattern: Pattern;
+  automation: AutomationSpec[];
+}
+
+export type SectionPart = Pattern | PartWithAutomation;
+
+export function partPattern(part: SectionPart): Pattern {
+  return "pattern" in part ? part.pattern : part;
+}
+
+export function partAutomation(part: SectionPart): AutomationSpec[] {
+  return "pattern" in part ? part.automation : [];
+}
 
 export interface Section {
   readonly name: string;
   readonly lengthBars: number;
-  readonly parts: Readonly<Record<string, Pattern>>;
+  readonly parts: Readonly<Record<string, SectionPart>>;
   readonly automation: readonly AutomationSpec[];
   /** Same section with a different length. */
   bars(lengthBars: number): Section;
   /** Same section with some parts replaced (null silences a track). */
-  with(overrides: Record<string, Pattern | null>): Section;
+  with(overrides: Record<string, SectionPart | null>): Section;
 }
 
 export interface SectionOptions {
@@ -25,7 +44,7 @@ export interface SectionOptions {
 export function section(
   name: string,
   lengthBars: number,
-  parts: Record<string, Pattern>,
+  parts: Record<string, SectionPart>,
   options: SectionOptions = {},
 ): Section {
   if (name.trim() === "")
@@ -49,11 +68,11 @@ export function section(
         { automation: [...automation] },
       );
     },
-    with(overrides: Record<string, Pattern | null>): Section {
-      const merged: Record<string, Pattern> = { ...parts };
-      for (const [trackId, pattern] of Object.entries(overrides)) {
-        if (pattern === null) delete merged[trackId];
-        else merged[trackId] = pattern;
+    with(overrides: Record<string, SectionPart | null>): Section {
+      const merged: Record<string, SectionPart> = { ...parts };
+      for (const [trackId, part] of Object.entries(overrides)) {
+        if (part === null) delete merged[trackId];
+        else merged[trackId] = part;
       }
       return section(name, lengthBars, merged, { automation: [...automation] });
     },

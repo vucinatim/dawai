@@ -114,6 +114,8 @@ function instrumentLabel(instrument: Instrument): string {
   switch (instrument.kind) {
     case "synth":
       return instrument.preset;
+    case "voice":
+      return "custom voice";
     case "sampler":
       return `kit:${instrument.kit}`;
     case "sample":

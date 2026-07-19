@@ -18,6 +18,7 @@ export type KitDefinition = Record<string, KitPad>;
 
 export const KITS: Record<KitId, KitDefinition> = {
   "dnb-standard": {
+    impact: { pitch: 24, sample: "dnb/impact" },
     kick: { pitch: 36, sample: "dnb/kick" },
     rim: { pitch: 37, sample: "dnb/rim" },
     snare: { pitch: 38, sample: "dnb/snare" },

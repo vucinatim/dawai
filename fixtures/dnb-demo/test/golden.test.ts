@@ -54,7 +54,7 @@ describe("dnb-demo golden", () => {
       "drop",
       "outro",
     ]);
-    expect(document.tracks).toHaveLength(6);
+    expect(document.tracks).toHaveLength(8);
     expect(document.buses.map((bus) => bus.id)).toEqual(["drumbus", "music"]);
     expect(document.automation.length).toBeGreaterThanOrEqual(4);
     const lengthBeats = 136 * 4;

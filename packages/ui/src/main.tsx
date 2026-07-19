@@ -9,12 +9,12 @@ import { connectLiveFeed } from "./live/ws-feed";
 initializeAudioEngine();
 // Live server first; the goal-2 fixture feed is the standalone fallback.
 connectLiveFeed().then(async (connected) => {
-  if (connected) return;
   const { feedDemoDocument, installDevFeed } = await import(
     "./fixture/demo-feed"
   );
-  feedDemoDocument();
   installDevFeed();
+  if (connected) return;
+  feedDemoDocument();
   console.log("dawai: no live server — previewing the built-in demo song");
 });
 

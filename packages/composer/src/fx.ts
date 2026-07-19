@@ -84,3 +84,12 @@ export function delay(
 export function limiter(ceiling = -1): Fx {
   return { type: "limiter", ceiling };
 }
+
+/** OTT-style multiband squash — the modern electronic glue. */
+export function ott(options: { amount?: number; gain?: number } = {}): Fx {
+  return {
+    type: "ott",
+    amount: options.amount ?? 0.5,
+    gain: options.gain ?? 2,
+  };
+}

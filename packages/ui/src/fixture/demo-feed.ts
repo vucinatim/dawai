@@ -25,5 +25,9 @@ export function installDevFeed(): void {
     feedOriginal: () => feedDemoDocument(),
     probe: () =>
       import("@/audio/dev-probe").then((module) => module.audioProbe()),
+    audition: () =>
+      import("@/audio/dev-probe").then((module) => module.audition()),
+    tone: () => import("tone"),
+    engine: () => import("@/audio/engine").then((module) => module.audioEngine),
   };
 }

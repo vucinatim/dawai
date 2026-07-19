@@ -16,6 +16,7 @@ import { validateDocument } from "@dawai/core/validate";
 import { type AutomationSpec, resolveDuration } from "./automation.ts";
 import { limiter } from "./fx.ts";
 import type { Pattern } from "./pattern.ts";
+import { partAutomation, partPattern } from "./section.ts";
 import type { DuckSpec, SongSpec, TrackSpec } from "./song.ts";
 
 /**
@@ -151,7 +152,7 @@ function compileArrangement(
       length: lengthBeats,
     });
 
-    for (const [trackId, pattern] of Object.entries(sectionValue.parts)) {
+    for (const [trackId, part] of Object.entries(sectionValue.parts)) {
       if (!trackSpecById.has(trackId)) {
         const known = [...trackSpecById.keys()].join(", ");
         throw new CompileError(
@@ -162,8 +163,17 @@ function compileArrangement(
         id: `${clipPrefix}:${trackId}`,
         start: cursorBeats,
         length: lengthBeats,
-        notes: tileNotes(pattern, lengthBeats),
+        notes: tileNotes(partPattern(part), lengthBeats),
       });
+      for (const automationSpec of partAutomation(part)) {
+        automationLanes.push(
+          resolveAutomation(
+            resolveSelfTarget(automationSpec, trackId),
+            cursorBeats,
+            targetContext,
+          ),
+        );
+      }
     }
 
     for (const automationSpec of sectionValue.automation) {
@@ -174,6 +184,15 @@ function compileArrangement(
 
     cursorBeats += lengthBeats;
   }
+}
+
+/** Rewrites `self.…` automation targets to the part's own track. */
+function resolveSelfTarget(
+  spec: AutomationSpec,
+  trackId: string,
+): AutomationSpec {
+  if (!spec.targetText.startsWith("self.")) return spec;
+  return { ...spec, targetText: `${trackId}.${spec.targetText.slice(5)}` };
 }
 
 function compilePlacements(

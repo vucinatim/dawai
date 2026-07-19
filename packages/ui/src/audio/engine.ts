@@ -1,9 +1,11 @@
 import type { AutomationLane, Document, Track } from "@dawai/core/document";
+import { SYNTH_PRESETS } from "@dawai/core/presets";
 import { beatsPerBar } from "@dawai/core/time";
+import { resolveVoice } from "@dawai/core/voice";
 import * as Tone from "tone";
 import { createKitVoices, type KitVoices } from "./drum-voices";
 import { createFxNode, type FxNode, type ParamRef } from "./fx-nodes";
-import { createSynthVoice, type InstrumentVoice } from "./synth-voices";
+import { createVoiceInstrument, type InstrumentVoice } from "./voice-builder";
 
 /**
  * The audio renderer: builds a Tone graph from a Document and plays it
@@ -100,8 +102,8 @@ export class AudioEngine {
     let masterTail: Tone.ToneAudioNode = this.masterInput;
     for (const fx of document.master.fx) {
       const fxNode = createFxNode(fx, (beats) => this.beatsToSeconds(beats));
-      masterTail.connect(fxNode.node);
-      masterTail = fxNode.node;
+      masterTail.connect(fxNode.input);
+      masterTail = fxNode.output;
       this.masterFxNodes.push(fxNode);
     }
     masterTail.toDestination();
@@ -113,8 +115,8 @@ export class AudioEngine {
       let tail: Tone.ToneAudioNode = input;
       for (const fx of bus.fx) {
         const fxNode = createFxNode(fx, (beats) => this.beatsToSeconds(beats));
-        tail.connect(fxNode.node);
-        tail = fxNode.node;
+        tail.connect(fxNode.input);
+        tail = fxNode.output;
         fxNodes.push(fxNode);
       }
       tail.connect(gain);
@@ -145,8 +147,8 @@ export class AudioEngine {
     let tail: Tone.ToneAudioNode | null = voice ? voice.output : null;
     for (const fx of track.fx) {
       const fxNode = createFxNode(fx, (beats) => this.beatsToSeconds(beats));
-      tail?.connect(fxNode.node);
-      tail = fxNode.node;
+      tail?.connect(fxNode.input);
+      tail = fxNode.output;
       fxNodes.push(fxNode);
     }
     tail?.connect(staticGain);
@@ -199,9 +201,21 @@ export class AudioEngine {
   private createVoice(track: Track): InstrumentVoice | KitVoices | null {
     switch (track.instrument.kind) {
       case "synth":
-        return createSynthVoice(track.instrument);
+        return createVoiceInstrument(
+          resolveVoice(
+            SYNTH_PRESETS[track.instrument.preset],
+            track.instrument.params,
+          ),
+        );
+      case "voice":
+        return createVoiceInstrument(track.instrument.voice);
       case "sampler":
-        return createKitVoices(track.instrument.kit);
+        return createKitVoices(
+          track.instrument.kit,
+          new Set(
+            track.clips.flatMap((clip) => clip.notes.map(([, pitch]) => pitch)),
+          ),
+        );
       case "sample":
         // Tier 2: sample-file playback. Render silence rather than
         // failing the whole song for one unrenderable track.

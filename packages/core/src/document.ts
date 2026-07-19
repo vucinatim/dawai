@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { KIT_IDS } from "./kits.ts";
 import { SYNTH_PRESET_IDS } from "./presets.ts";
+import { voiceDefinitionSchema } from "./voice.ts";
 
 /**
  * The Document: dawai's IR. A compile artifact of song source — never
@@ -34,7 +35,13 @@ export const instrumentSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("synth"),
     preset: z.enum(SYNTH_PRESET_IDS),
+    /** Dotted-path overrides into the preset's voice (see voice.ts). */
     params: z.record(z.string(), z.number().finite()),
+  }),
+  z.object({
+    kind: z.literal("voice"),
+    /** A fully inline custom voice — song-level custom synths. */
+    voice: voiceDefinitionSchema,
   }),
   z.object({
     kind: z.literal("sampler"),
@@ -95,6 +102,13 @@ export const fxSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("limiter"),
     ceiling: z.number().finite().min(-12).max(0),
+  }),
+  z.object({
+    /** OTT-style multiband squash: the modern electronic glue. */
+    type: z.literal("ott"),
+    amount: z.number().finite().min(0).max(1),
+    /** Makeup gain in dB. */
+    gain: z.number().finite().min(-12).max(12),
   }),
 ]);
 

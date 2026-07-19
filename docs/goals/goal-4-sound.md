@@ -81,22 +81,22 @@ Authority docs: [sound-design.md](../sound-design.md),
 
 ## Acceptance criteria
 
-- [ ] All gates green; IR changes additive (goal-1/2/3 tests still
+- [x] All gates green; IR changes additive (goal-1/2/3 tests still
       pass with only deliberate snapshot updates).
-- [ ] Renderer instrument/fx construction is registry-driven (no
+- [x] Renderer instrument/fx construction is registry-driven (no
       type-switch left in the build path).
-- [ ] An inline custom voice defined in a song project compiles,
-      validates, and sounds.
-- [ ] Automated audition probe: `__dawai.audition()` plays every
+- [x] An inline custom voice defined in a song project compiles,
+      validates, and sounds (`customVoice` in sound-tour).
+- [x] Automated audition probe: `__dawai.audition()` plays every
       preset and kit pad and reports per-sound peak/RMS — nothing
       silent, master never clips (peak < 0 dBFS with the limiter
       engaged).
-- [ ] Filter movement is audible on at least reese, pad, pluck, and
+- [x] Filter movement is audible on at least reese, pad, pluck, and
       supersaw (and visible in the probe as spectral change over a
       held note — coarse check via repeated FFT snapshots).
-- [ ] `riser`/`sweep`/`impact` are one-liner placements in a section
+- [x] `riser`/`sweep`/`impact` are one-liner placements in a section
       and are documented in the generated AGENTS.md.
-- [ ] Neon Rain v2 uses risers, impacts, OTT, tuned duck, and fills;
+- [x] Neon Rain v2 uses risers, impacts, OTT, tuned duck, and fills;
       compiles deterministically; golden snapshots updated.
 
 ## Validation (ears-first, budget-conscious — no agent fleets)
@@ -115,6 +115,43 @@ Authority docs: [sound-design.md](../sound-design.md),
    Neon Rain v2 judged clearly better than v1 with transitions that
    feel produced; the duck pump plainly audible in the drops.
 5. Validation record written here; TODO items ticked.
+
+## Validation record — objective pass (2026-07-19)
+
+Gates: 114 tests, `tsc`, `biome` all green. `dawai check` clean on
+sound-tour (13 tracks, 52 bars) and Neon Rain v2 (8 tracks, 136 bars).
+
+**Audition probe** (Chrome, M1 Pro): all 12 presets and all 13 kit
+pads sound — `silent: []`. Peaks balanced (presets 0.14–0.43, pads
+0.14–1.08 pre-track-gain; master peak 0.82 at the drop, no clipping).
+Filter movement (spectral-centroid drift over held note): reese 0.57,
+supersaw 0.31, warm-pad 2.80, pluck 0.15 — all four plainly moving.
+
+**Bugs found and fixed by the probe + playback tracing:**
+
+1. *MetalSynth pitch arg* — crash/ride triggered with
+   `(duration, time, velocity)` but Tone v15 Monophonic takes
+   `(note, duration, time, velocity)`: the decay was interpreted as a
+   1.6 Hz note → subsonic silence. Types didn't catch it (`Frequency`
+   accepts numbers). Fixed with an explicit 250 Hz strike note and
+   recalibrated gains (crash −20 dB, ride −18 dB).
+2. *Probe measurement* — single analyser snapshots (~43 ms window)
+   missed short percussive sounds entirely; audition now polls
+   peak/centroid across each sound's whole duration.
+3. *WebAudio node-budget collapse* — the render thread starved
+   (context clock at ~9% of realtime, silence mid-song) because the
+   graph built ~3,900 nodes eagerly: every kit track instantiated all
+   13 layered pad recipes (~780 nodes per kit), Tone.Chorus costs ~70
+   nodes per voice instrument, and each MonoSynth voice costs ~50.
+   Fixed: kit tracks only build pads their clips actually use (pitch
+   set known at build time), Tone.Chorus replaced with a ~9-node
+   dual-delay chorus, layer polyphony capped at 6. Buildup → drop
+   transition now renders at 1.0× realtime throughout (was 0.16×).
+
+Transport stability: drop looped 16 s at 1.0× realtime; buildup → drop
+boundary (riser + impact + sweep + full drop spin-up) at 1.0×.
+
+Listening round: handed to the human (protocol above) — pending.
 
 ## Explicitly out of scope (queued behind this goal)
 

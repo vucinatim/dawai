@@ -37,7 +37,7 @@ describe("dawai check", () => {
     const result = dawai("check", demoSong, "--skip-typecheck");
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain("✓ Neon Rain");
-    expect(result.stdout).toContain("6 tracks, 136 bars at 174 BPM");
+    expect(result.stdout).toContain("8 tracks, 136 bars at 174 BPM");
   });
 
   test("emits structured JSON with a summary", () => {
@@ -49,7 +49,7 @@ describe("dawai check", () => {
     expect(payload.summary).toEqual({
       name: "Neon Rain",
       tempo: 174,
-      tracks: 6,
+      tracks: 8,
       bars: 136,
     });
   });
@@ -159,7 +159,7 @@ describe("dawai inspect", () => {
     expect(result.exitCode).toBe(0);
     const document = JSON.parse(result.stdout);
     expect(document.version).toBe(1);
-    expect(document.tracks).toHaveLength(6);
+    expect(document.tracks).toHaveLength(8);
   });
 
   test("fails with compile errors when the song is broken", () => {

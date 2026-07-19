@@ -14,8 +14,10 @@ import {
   eq,
   filter,
   limiter,
+  ott,
   reverb,
 } from "@dawai/composer/fx";
+import { impact, riser, sweep } from "@dawai/composer/idioms";
 import { drums, kit, sampler, synth } from "@dawai/composer/instruments";
 import { section } from "@dawai/composer/section";
 import { bus, duck, song, track } from "@dawai/composer/song";
@@ -105,6 +107,7 @@ function buildup(lengthBars: number) {
       reese: reeseRiff,
       pads: padProgression,
       arp: atmosphereArp,
+      fx: riser(lengthBars * 4),
     },
     {
       automation: [
@@ -124,6 +127,8 @@ const drop1 = section("drop", 32, {
   sub: bassRiff,
   reese: reeseRiff,
   pads: padProgression,
+  impacts: impact(dnbKit, { holdBeats: 128 }),
+  fx: sweep(8, { holdBeats: 128 }),
 });
 
 const breakdown = section(
@@ -180,7 +185,7 @@ export default song({
     }),
     track("sub", synth("sub-sine"), {
       gain: -4,
-      duck: duck({ trigger: "drums:kick", amount: -5, release: 0.4 }),
+      duck: duck({ trigger: "drums:kick", amount: -7, release: 0.35 }),
     }),
     track("reese", synth("reese"), {
       gain: -8,
@@ -197,17 +202,28 @@ export default song({
       out: "music",
       fx: [reverb(0.35)],
     }),
+    track("fx", synth("riser-noise"), {
+      gain: -12,
+      out: "music",
+      fx: [filter("bandpass", 500, 1.5)],
+    }),
+    track("impacts", sampler(dnbKit), {
+      gain: -4,
+      out: "drumbus",
+    }),
   ],
   buses: {
     drumbus: bus({
       fx: [
         compressor({ threshold: -18, ratio: 4, attack: 0.003, release: 0.15 }),
+        ott({ amount: 0.5, gain: 2 }),
         eq({ low: -1 }),
       ],
     }),
     music: bus({
       gain: -2,
-      duck: duck({ trigger: "drums:kick", amount: -3, release: 0.35 }),
+      fx: [ott({ amount: 0.3, gain: 1 })],
+      duck: duck({ trigger: "drums:kick", amount: -5, release: 0.35 }),
     }),
   },
   master: [eq({ high: 1 }), limiter(-1)],

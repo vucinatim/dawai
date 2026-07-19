@@ -76,12 +76,11 @@ export function runInit(name: string): number {
   return 0;
 }
 
-const STARTER_SONG = `import { chords, steps } from "@dawai/composer/builders";
-import { stack } from "@dawai/composer/combinators";
-import { limiter, reverb } from "@dawai/composer/fx";
+const STARTER_SONG = `import { arp, chords, melody } from "@dawai/composer/builders";
+import { limiter, ott, reverb } from "@dawai/composer/fx";
 import { drums, kit, sampler, synth } from "@dawai/composer/instruments";
 import { section } from "@dawai/composer/section";
-import { song, track } from "@dawai/composer/song";
+import { bus, duck, song, track } from "@dawai/composer/song";
 
 const standardKit = kit("dnb-standard");
 
@@ -91,20 +90,33 @@ const beat = drums(standardKit, {
   chh: "x.x.x.x.x.x.x.x.",
 });
 
+const bassline = melody("A1 ~ ~ . F1 ~ ~ . C2 ~ ~ . G1 ~ G1 .", { step: 1 });
 const progression = chords(["Am7", "Fmaj7", "Cmaj7", "G"], { beats: 4 });
+const sparkle = arp("Am7", { style: "updown", step: 0.25, octaves: 2 });
 
 export default song({
   name: "New Song",
   tempo: 120,
   timeSignature: [4, 4],
   tracks: [
-    track("drums", sampler(standardKit), { gain: -4 }),
+    track("drums", sampler(standardKit), { gain: -4, out: "drumbus" }),
+    track("bass", synth("sub-sine"), {
+      gain: -5,
+      duck: duck({ trigger: "drums:kick" }),
+    }),
     track("keys", synth("keys"), { gain: -8, fx: [reverb(0.25)] }),
+    track("arp", synth("pluck"), { gain: -12, pan: 0.2 }),
   ],
+  buses: { drumbus: bus({ fx: [ott({ amount: 0.4 })] }) },
   master: [limiter(-1)],
   arrangement: [
-    section("intro", 4, { keys: progression }),
-    section("groove", 8, { drums: beat, keys: progression }),
+    section("intro", 4, { keys: progression, arp: sparkle }),
+    section("groove", 8, {
+      drums: beat,
+      bass: bassline,
+      keys: progression,
+      arp: sparkle,
+    }),
   ],
 });
 `;
@@ -159,8 +171,11 @@ humanize(p, { seed: 7 })  vary(p, { seed: 7, amount: 0.4 })
 drums(kit("dnb-standard"), { kick: "x...x...", snare: "....x..." })
 // dnb-standard pads: kick rim snare clap chh phh ohh crash ride perc1 perc2 shaker
 
-// Instruments
-synth("sub-sine" | "reese" | "fat-saw" | "supersaw" | "warm-pad" | "pluck" | "keys" | "bell")
+// Instruments (presets are layered voices with moving filters)
+synth("sub-sine" | "reese" | "fat-saw" | "supersaw" | "warm-pad" | "pluck" |
+      "keys" | "bell" | "hoover" | "stab" | "riser-noise" | "arp-saw")
+synth("reese", { "filter.cutoff": 500, "filterEnvelope.octaves": 3 })  // param overrides
+customVoice({ layers: [...], amp, filter, filterEnvelope, drive, chorus })  // your own synth
 sampler(kit("dnb-standard" | "tr-909"))
 
 // Mixing (gain in dB; fx envelopes in seconds; musical times in beats)
@@ -169,11 +184,24 @@ track("bass", synth("sub-sine"), { gain: -4, pan: 0, out: "musicbus", fx: [...],
 bus({ gain: -2, fx: [compressor({ ratio: 4 })] })     // song({ buses: { musicbus: ... } })
 filter("lowpass", 900)  eq({ low: 1 })  compressor({...})  distortion(0.3)
 chorus({...})  reverb(0.3)  delay({ time: 0.75 })  limiter(-1)
+ott({ amount: 0.5, gain: 2 })   // multiband glue — put on drum/music buses
 
 // Sections + automation (@dawai/composer/section, /automation)
 section("drop", 16, { drums: beat, bass: riff }, {
   automation: [automate("bass.fx.filter.cutoff", ramp(bars(16), 400, 8000, "exp"))],
 })
+// Transitions (@dawai/composer/idioms) — one-liners in section parts.
+// riser/sweep need their track's first fx to be a filter:
+//   track("fx", synth("riser-noise"), { fx: [filter("bandpass", 500, 1.5)] })
+fx: riser(32)                          // rising build into a drop
+fx: sweep(8, { holdBeats: 128 })       // falling release after the drop hits
+impacts: impact(standardKit, { holdBeats: 128 })  // downbeat boom (sampler track)
+// holdBeats = section length in beats, so one-shots don't tile.
+
+// Parts can carry their own automation with self.* targets:
+// section("build", 8, { bass: { pattern: riff, automation: [
+//   automate("self.fx.0.cutoff", ramp(32, 400, 8000, "exp"))] } })
+
 // Patterns shorter than a section tile (loop) to fill it.
 // arrangement: [intro, buildup, drop] — sections play in order.
 \`\`\`

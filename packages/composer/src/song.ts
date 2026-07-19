@@ -30,8 +30,9 @@ export function duck(options: {
   amount?: number;
   release?: number;
 }): DuckSpec {
-  const amount = options.amount ?? -6;
-  const release = options.release ?? 0.5;
+  // Defaults tuned so the pump is plainly audible out of the box.
+  const amount = options.amount ?? -9;
+  const release = options.release ?? 0.4;
   if (amount >= 0)
     throw new Error(`duck() amount is a negative dB offset, got ${amount}.`);
   if (release <= 0)
